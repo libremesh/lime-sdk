@@ -1,5 +1,6 @@
 #!/bin/bash
 . options.conf
+[ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 
 usage() {
 	echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [-a]"
