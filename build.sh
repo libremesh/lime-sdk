@@ -21,17 +21,18 @@ build_packets() {
 	sdk="$release/$target/sdk"
 	
 	[ ! -d "$sdk" ] && { 
-		echo "You must download first sdk"
+		echo "You must download first SDK"
+		usage
 		exit 1
 	}
 	
 	cp $feeds_file $sdk/feeds.conf
 	(cd $sdk && scripts/feeds update -a)
-	#(cd $sdk && scripts/feeds install -a)
-	#(cd $sdk && scripts/feeds uninstall -a)
 	(cd $sdk && scripts/feeds install -p libremesh -a)
+	(cd $sdk && scripts/feeds install -p libremap -a)
+	(cd $sdk && scripts/feeds install -p lime-ui-ng -a)
 	cp $sdk_config $sdk/.config
-	(cd $sdk && make defconfig)
+	make -C $sdk defconfig
 	make -j$make_j -C $sdk
 }
 
@@ -79,8 +80,8 @@ download_all() {
 download() {
 	target="$1"
 	[ -z "$target" ] && {
-		echo "Download SDK and ImageBuilder files"
-		echo "Use: $0 <target>"
+		echo "Download SDK and ImageBuilder files first"
+		usage
 		exit 1
 	}
 	url="$base_url/$target"
@@ -90,9 +91,9 @@ download() {
 	sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
 	echo "Downloading $url/$sdk_file"
 	wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file"
-	tar xxf $tmp_dir/$sdk_file -C $output/
+	tar xf $tmp_dir/$sdk_file -C $output/
 	[ $? -eq 0 ] && {
-		rm -rf $output/sdk
+		[ -d $output/sdk ] && rm -rf $output/sdk
 		mv $output/lede-sdk* $output/sdk
 		rm -rf $output/sdk/dl
 		dl=$downloads_dir
@@ -104,10 +105,10 @@ download() {
 	ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
 	echo "Downloading $url/$ib_file"
 	wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file"
-	tar xxf $tmp_dir/$ib_file -C $output/
+	tar xf $tmp_dir/$ib_file -C $output/
 	[ $? -eq 0 ] && {
 #TODO: link IB with SDK packages
-		rm -rf $output/ib
+		[ -d $output/ib ] && rm -rf $output/ib
 		mv $output/lede-imagebuilder* $output/ib
 		#rm -f $TMP/$IB_FILE
 	} || echo "Error installing ImageBuilder"
