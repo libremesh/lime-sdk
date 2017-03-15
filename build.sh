@@ -2,6 +2,7 @@
 . options.conf
 [ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 [ ! -d "$downloads_dir" ] && mkdir -p "$downloads_dir"
+J=${J:-$make_j}
 
 usage() {
 	echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [-a]"
@@ -33,7 +34,7 @@ build_packets() {
 	(cd $sdk && scripts/feeds install -p lime-ui-ng -a)
 	cp $sdk_config $sdk/.config
 	make -C $sdk defconfig
-	make -j$make_j -C $sdk
+	make -j$J -C $sdk V=$V
 }
 
 download_feeds() {
