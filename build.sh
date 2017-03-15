@@ -15,6 +15,11 @@ usage() {
 	echo "  $0 -d ar71xx/generic"
 	echo "  $0 -f feeds.conf.default"
 	echo "  $0 -b ar71xx/generic"
+	echo ""
+	echo "Current supported targets:"
+	echo "--------------------------"
+	cat $targets_list | while read t; do echo -e "  $t"; done
+	echo "--------------------------"
 }
 
 build_packets() {
@@ -87,7 +92,7 @@ download_all() {
 download() {
 	target="$1"
 	[ -z "$target" ] && {
-		echo "Download SDK and ImageBuilder files first"
+		echo "You must specify target to download, check $targets_list file"
 		usage
 		exit 1
 	}
