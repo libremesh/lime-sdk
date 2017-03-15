@@ -27,11 +27,17 @@ build_packets() {
 		exit 1
 	}
 	
-	cp $feeds_file $sdk/feeds.conf
+	[ -f $feeds_file ] && cp $feeds_file $sdk/feeds.conf || {
+		echo "Local feeds file not found, using standard remote feeds"
+		cp -f $sdk/feeds.conf.default $sdk/feeds.conf
+		echo "src-git libremesh $lime_repo;$lime_branch" >> $sdk/feeds.conf
+		echo "src-git libremap $limap_repo;$limap_branch" >> $sdk/feeds.conf
+		echo "src-git limeui $limeui_repo;$limeui_branch" >> $sdk/feeds.conf
+	}
 	(cd $sdk && scripts/feeds update -a)
 	(cd $sdk && scripts/feeds install -p libremesh -a)
 	(cd $sdk && scripts/feeds install -p libremap -a)
-	(cd $sdk && scripts/feeds install -p lime-ui-ng -a)
+	(cd $sdk && scripts/feeds install -p limeui -a)
 	cp $sdk_config $sdk/.config
 	make -C $sdk defconfig
 	make -j$J -C $sdk V=$V
@@ -69,9 +75,9 @@ download_feeds() {
 	git clone $limap_repo -b $limap_branch $output/libremap
 	echo "src-link libremap $PWD/$output/libremap" >> $feeds_file
 	
-	[ -d $output/lime-ui-ng ] && rm -rf $output/lime-ui-ng
-	git clone $limeui_repo -b $limeui_branch $output/lime-ui-ng
-	echo "src-link limeui $PWD/$output/lime-ui-ng" >> $feeds_file
+	[ -d $output/limeui ] && rm -rf $output/limeui
+	git clone $limeui_repo -b $limeui_branch $output/limeui
+	echo "src-link limeui $PWD/$output/limeui" >> $feeds_file
 }
 
 download_all() {
