@@ -5,21 +5,23 @@
 J=${J:-$make_j}
 
 usage() {
-	echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [-a]"
-	echo "	-a		: download all SDK and IB"
-	echo "	-f <file>	: download feeds based on feeds.conf file"
-	echo "	-b <target>	: build target"
-	echo "	-d <target>	: download SDK and IB for target"
+	echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all] [--build-all] [--targets]"
+	echo "	--download-all	: download all SDK and ImageBuilders"
+	echo "	--build-all	: build SDK for all tagets"
+	echo "	--targets	: list officialy supported targets"
+	echo "	-f <file>	: download feeds based on feeds.conf file, will be used for all targets"
+	echo "	-b <target>	: build specific target SDK"
+	echo "	-d <target>	: download SDK and IB for specific target"
 	echo ""
 	echo "Example of usage for building ar71xx target:"
 	echo "  $0 -d ar71xx/generic"
 	echo "  $0 -f feeds.conf.default"
 	echo "  $0 -b ar71xx/generic"
 	echo ""
-	echo "Current supported targets:"
-	echo "--------------------------"
-	cat $targets_list | while read t; do echo -e "  $t"; done
-	echo "--------------------------"
+}
+
+list_targets() {
+	cat $targets_list
 }
 
 build_packets() {
@@ -27,10 +29,11 @@ build_packets() {
 	sdk="$release/$target/sdk"
 	
 	[ ! -d "$sdk" ] && { 
-		echo "You must download first SDK"
-		usage
-		exit 1
+		echo "SDK for target $target not found"
+		download_sdk_ib $target
 	}
+
+	echo "Building $sdk"
 	
 	[ -f $feeds_file ] && cp $feeds_file $sdk/feeds.conf || {
 		echo "Local feeds file not found, using standard remote feeds"
@@ -43,6 +46,7 @@ build_packets() {
 	(cd $sdk && scripts/feeds install -p libremesh -a)
 	(cd $sdk && scripts/feeds install -p libremap -a)
 	(cd $sdk && scripts/feeds install -p limeui -a)
+	(cd $sdk && scripts/feeds install libustream-openssl) # workaround for ustream-ssl uhttpd crash
 	cp $sdk_config $sdk/.config
 	make -C $sdk defconfig
 	make -j$J -C $sdk V=$V
@@ -85,11 +89,15 @@ download_feeds() {
 	echo "src-link limeui $PWD/$output/limeui" >> $feeds_file
 }
 
-download_all() {
-	cat $targets_list | while read t; do download $t; done
+build_all_sdk() {
+	cat $targets_list | while read t; do build_packets $t; done
 }
 
-download() {
+download_all() {
+	cat $targets_list | while read t; do download_sdk_ib $t; done
+}
+
+download_sdk_ib() {
 	target="$1"
 	[ -z "$target" ] && {
 		echo "You must specify target to download, check $targets_list file"
@@ -126,26 +134,49 @@ download() {
 	} || echo "Error installing ImageBuilder"
 }
 
-[ -z "$1" ] && usage
+OPTS=`getopt -o hd:f:b: -l targets,build-all,download-all -n $0 -- "$@"`
+eval set -- "$OPTS"
 
-while getopts "ad:f:b:" opt; do
-	case $opt in
-	a) 
-	  download_all
-	;;
-	d)
-	  download $OPTARG
-	;;
-	f)
-	  download_feeds $OPTARG
-	;;
-	b)
-	  build_packets $OPTARG
-	;;
+while true; do
+	case $1 in
+	--download-all)
+		download_all
+		break
+		;;
+	--build-all)
+		build_all_sdk
+		break
+		;;
+	--targets)
+		list_targets
+		break
+		;;
+	-d)
+		download_sdk_ib $2
+		break
+		;;
+	-f)
+		download_feeds $2
+		break
+		;;
+	-b)
+		build_packets $2
+		break
+		;;
+	-h)
+		usage
+		exit 1
+		;;
+	--)
+		shift
+		break
+		;;
 	*)
-	  echo "Invalid option: -$OPTARG"
-	  usage
-	;;
-  esac
+		echo "Invalid option"
+		usage
+		exit 1
+		;;
+	esac
 done
 
+[ -z "$1" ] && usage
