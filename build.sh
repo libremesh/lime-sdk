@@ -1,22 +1,35 @@
 #!/bin/bash
 . options.conf
+. flavors.conf
 [ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 [ ! -d "$downloads_dir" ] && mkdir -p "$downloads_dir"
+[ ! -d "$bin_output" ] && mkdir -p "$bin_output"
 J=${J:-$make_j}
 
 usage() {
-    echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all] [--build-all] [--targets]"
-    echo "    --download-all  : download all SDK and ImageBuilders"
-    echo "    --build-all	    : build SDK for all tagets"
-    echo "    --targets       : list officialy supported targets"
-    echo "    -f <file>       : download feeds based on feeds.conf file, will be used for all targets"
-    echo "    -b <target>     : build specific target SDK"
-    echo "    -d <target>     : download SDK and IB for specific target"
+    echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all|build-all]"
+    echo "          [--targets|flavors|profiles] [-c <target> --profile=<profile> --flavor=<flavor>]"
+    echo ""
+    echo "    --download-all            : download all SDK and ImageBuilders"
+    echo "    --build-all	              : build SDK for all available tagets"
+    echo "    --cook-all	              : cook firmwares for all available targets"
+    echo "    --targets                 : list officialy supported targets"
+    echo "    --profiles=<target>       : list available target profiles for cooking"
+    echo "    --profile=<profile>       : use <profile> when cooking firmware"
+    echo "    --flavors                 : list available LibreMesh flavors for cooking"
+    echo "    --flavor=<flavor>         : use <flavor> when cooking firmware (default generic)"
+    echo "    --update-feeds            : update previously downloaded feeds (only works with Git feeds)"
+    echo "    -f <feeds.conf>           : download feeds based on feeds.conf file. Feeds will be shared among all targets"
+    echo "    -b <target>               : build specific target SDK"
+    echo "    -d <target>               : download SDK and IB for specific target"
+    echo "    -c <target>               : cook the firmware for specific target. Can be used with --profile and --flavor"
     echo ""
     echo "Example of usage for building ar71xx target:"
+    echo ""
     echo "    $0 -d ar71xx/generic"
     echo "    $0 -f feeds.conf.default"
     echo "    $0 -b ar71xx/generic"
+    echo "    $0 -c ar71xx/generic --profile=tl-wdr3500-v1 --flavor=generic"
     echo ""
 }
 
@@ -24,19 +37,41 @@ list_targets() {
     cat $targets_list
 }
 
+cook() {
+    local target="$1"
+    local profile="$2"
+    local flavor="$3"
+    local ib="$release/$target/ib"
+    local output_dir="$PWD/$bin_output/$target/$profile/$flavor"
+
+    [ ! -d "$ib" ] || ! grep -q \#\#LibreMesh $ib/repositories.conf && {
+        echo "-> ImageBuilder for target $target not rady"
+        build_packets $target
+    }
+    [ ! -d "$output_dir" ] && mkdir -p $output_dir
+    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" && {
+      echo ""
+      echo "-> Firmware for target $target, profile $profile and flavor $flavor cooked! Find the binaries in $output_dir directory" || {
+      echo ""
+      echo "-> Firmware not cooked, something wrong on the ImageBuilder compilation process" 
+      }
+    }
+}
+
 build_packets() {
-    target="$1"
-    sdk="$release/$target/sdk"
-    
+    local target="$1"
+    local sdk="$release/$target/sdk"
+    local ib="$release/$target/ib"
+
     [ ! -d "$sdk" ] && {
-        echo "SDK for target $target not found"
+        echo "-> SDK for target $target not found"
         download_sdk_ib $target
     }
     
-    echo "Building $sdk"
+    echo "-> Building $sdk"
     
     [ -f $feeds_file ] && cp $feeds_file $sdk/feeds.conf || {
-        echo "Local feeds file not found, using standard remote feeds"
+        echo "-> Local feeds file not found, using standard remote feeds"
         cp -f $sdk/feeds.conf.default $sdk/feeds.conf
         echo "src-git libremesh $lime_repo;$lime_branch" >> $sdk/feeds.conf
         echo "src-git libremap $limap_repo;$limap_branch" >> $sdk/feeds.conf
@@ -49,15 +84,26 @@ build_packets() {
     (cd $sdk && scripts/feeds install libustream-openssl) # workaround for ustream-ssl uhttpd crash
     cp $sdk_config $sdk/.config
     make -C $sdk defconfig
-    make -j$J -C $sdk V=$V
+    make -j$J -C $sdk V=$V && {
+        grep -q \#\#LibreMesh $ib/repositories.conf || {
+          echo "-> Linking IB with SDK"
+          local repo1=$PWD/$sdk/bin/packages/*/libremesh
+          local repo2=$PWD/$sdk/bin/packages/*/libremap
+          local repo3=$PWD/$sdk/bin/packages/*/limeui
+          echo "##LibreMesh" >> $ib/repositories.conf
+          echo "src libremesh file:$repo1" >> $ib/repositories.conf
+          echo "src libremap file:$repo2" >> $ib/repositories.conf
+          echo "src limeui file:$repo3" >> $ib/repositories.conf
+        }
+    }
 }
 
 download_feeds() {
-    feeds_template="$1"
-    output="$feeds_dir"
+    local feeds_template="$1"
+    local output="$feeds_dir"
     rm -f $feeds_file
     [ ! -d "$output" ] && mkdir -p "$output"
-    echo "Downloading feeds into $output/"
+    echo "-> Downloading feeds into $output/"
     
     cat $feeds_template | grep ^src-git | while read feed; do
         name="$(echo $feed | awk '{print $2}')"
@@ -89,6 +135,12 @@ download_feeds() {
     echo "src-link limeui $PWD/$output/limeui" >> $feeds_file
 }
 
+update_feeds() {
+    for f in $feeds_dir/*; do
+        [ -d $f/.git ] && (cd $f && git pull)
+    done
+}
+
 build_all_sdk() {
     cat $targets_list | while read t; do build_packets $t; done
 }
@@ -98,43 +150,51 @@ download_all() {
 }
 
 download_sdk_ib() {
-    target="$1"
+    local target="$1"
     [ -z "$target" ] && {
-        echo "You must specify target to download, check $targets_list file"
+        echo "-> You must specify target to download, check $targets_list file"
         usage
         exit 1
     }
-    url="$base_url/$target"
-    output="$release/$target"
+    local url="$base_url/$target"
+    local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
     
-    sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
-    echo "Downloading $url/$sdk_file"
+    local sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    echo "-> Downloading $url/$sdk_file"
     wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file"
     tar xf $tmp_dir/$sdk_file -C $output/
     [ $? -eq 0 ] && {
         [ -d $output/sdk ] && rm -rf $output/sdk
         mv $output/lede-sdk* $output/sdk
         rm -rf $output/sdk/dl
-        dl=$downloads_dir
+        local dl=$downloads_dir
         echo $dl | grep -q / || dl="$PWD/$dl"
         ln -s $dl $output/sdk/dl
         #rm -f $TMP/$SDK_FILE
-    } || echo "Error installing SDK"
+    } || echo "-> Error installing SDK"
     
-    ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
-    echo "Downloading $url/$ib_file"
+    local ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    echo "-> Downloading $url/$ib_file"
     wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file"
     tar xf $tmp_dir/$ib_file -C $output/
     [ $? -eq 0 ] && {
-        #TODO: link IB with SDK packages
         [ -d $output/ib ] && rm -rf $output/ib
         mv $output/lede-imagebuilder* $output/ib
+        rm -rf $output/ib/dl
+        local dl=$downloads_dir
+        echo $dl | grep -q / || dl="$PWD/$dl"
+        ln -s $dl $output/ib/dl
         #rm -f $TMP/$IB_FILE
-    } || echo "Error installing ImageBuilder"
+    } || echo "-> Error installing ImageBuilder"
 }
 
-OPTS=`getopt -o hd:f:b: -l targets,build-all,download-all -n $0 -- "$@"`
+list_flavors() {
+    cat flavors.conf | egrep -v "^_" | awk -F= '{print $1}'
+}
+
+[ -z "$1" ] && usage
+OPTS=`getopt -o hd:f:b:c: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,update-feeds -n $0 -- "$@"`
 eval set -- "$OPTS"
 
 while true; do
@@ -151,6 +211,18 @@ while true; do
             list_targets
             break
         ;;
+      --profiles)
+            list_profiles $2
+            break
+        ;;
+      --flavors)
+            list_flavors
+            break
+        ;;
+      --update-feeds)
+            update_feeds
+            break
+        ;;
         -d)
             download_sdk_ib $2
             break
@@ -163,20 +235,35 @@ while true; do
             build_packets $2
             break
         ;;
+        -c)
+            cook=1
+            target="$2"
+            shift;shift
+        ;;  
+        --profile)
+            profile="$2"
+            shift;shift
+        ;;
+        --flavor)
+            flavor="$2"
+            shift;shift
+        ;;
         -h)
             usage
-            exit 1
+            break
         ;;
         --)
             shift
             break
         ;;
         *)
-            echo "Invalid option"
-            usage
-            exit 1
         ;;
     esac
 done
 
-[ -z "$1" ] && usage
+[ "$cook" == "1" ] && {
+    profile=${profile:-Default}
+    flavor=${flavor:-generic}
+    cook $target $profile $flavor
+}
+
