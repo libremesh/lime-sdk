@@ -8,7 +8,7 @@ J=${J:-$make_j}
 
 usage() {
     echo "Usage: $0 [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all|build-all]"
-    echo "          [--targets|flavors|profiles] [-c <target> --profile=<profile> --flavor=<flavor>]"
+    echo "          [--targets|flavors|profiles=<target>] [-c <target> --profile=<profile> --flavor=<flavor>]"
     echo ""
     echo "    --download-all            : download all SDK and ImageBuilders"
     echo "    --build-all	              : build SDK for all available tagets"

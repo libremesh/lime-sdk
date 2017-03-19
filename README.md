@@ -1,8 +1,8 @@
 # lime-sdk
 LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate LibreMesh packages and firmware.
 
-    Usage: ./build.sh [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all|build-all]
-              [--targets|flavors|profiles] [-c <target> --profile=<profile> --flavor=<flavor>]
+    Usage: ./cooker [-f <feeds.conf.default>] [-d <target>] [-b <target>] [--download-all|build-all]
+              [--targets|flavors|profiles=<target>] [-c <target> --profile=<profile> --flavor=<flavor>]
     
         --download-all            : download all SDK and ImageBuilders
         --build-all	              : build SDK for all available tagets
@@ -20,11 +20,10 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
     
     Example of usage for building ar71xx target:
     
-        ./build.sh -d ar71xx/generic
-        ./build.sh -f feeds.conf.default
-        ./build.sh -b ar71xx/generic
-        ./build.sh -c ar71xx/generic --profile=tl-wdr3500-v1 --flavor=generic
+        ./cooker -d ar71xx/generic
+        ./cooker -f feeds.conf.default
+        ./cooker -b ar71xx/generic
+        ./cooker -c ar71xx/generic --profile=tl-wdr3500-v1 --flavor=generic
     
-
 
 Status: Alpha
