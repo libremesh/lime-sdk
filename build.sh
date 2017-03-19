@@ -12,10 +12,10 @@ usage() {
     echo ""
     echo "    --download-all            : download all SDK and ImageBuilders"
     echo "    --build-all	              : build SDK for all available tagets"
-    echo "    --cook-all	              : cook firmwares for all available targets"
-    echo "    --targets                 : list officialy supported targets"
-    echo "    --profiles=<target>       : list available target profiles for cooking"
-    echo "    --profile=<profile>       : use <profile> when cooking firmware"
+    echo "    --cook-all	              : cook firmwares for all available targets (TBD)"
+    echo "    --targets                 : list all officialy supported targets"
+    echo "    --profiles=<target>       : list available hardware profiles for a specific target"
+    echo "    --profile=<profile>       : use <profile> when cooking firmware (default is all available target profiles)"
     echo "    --flavors                 : list available LibreMesh flavors for cooking"
     echo "    --flavor=<flavor>         : use <flavor> when cooking firmware (default generic)"
     echo "    --update-feeds            : update previously downloaded feeds (only works with Git feeds)"
@@ -191,6 +191,11 @@ download_sdk_ib() {
 
 list_flavors() {
     cat flavors.conf | egrep -v "^_" | awk -F= '{print $1}'
+}
+
+list_profiles() {
+    local target="$1"
+    make -C $release/$target/ib info
 }
 
 [ -z "$1" ] && usage
