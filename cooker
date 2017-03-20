@@ -45,7 +45,7 @@ cook() {
     local ib="$release/$target/ib"
     local output_dir="$PWD/$bin_output/$target/$profile/$flavor"
 
-    [ ! -d "$ib" ] || ! grep -q \#\#LibreMesh $ib/repositories.conf && {
+    [ ! -d "$ib" ] || ! grep -q \#\#SDK_repo $ib/repositories.conf && {
         echo "-> ImageBuilder for target $target not rady"
         build_packets $target
     }
@@ -86,17 +86,20 @@ build_packets() {
     cp $sdk_config $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && {
-        grep -q \#\#LibreMesh $ib/repositories.conf || {
+        grep -q \#\#SDK_repos $ib/repositories.conf || {
           echo "-> Linking IB with SDK"
-          local repo1=$PWD/$sdk/bin/packages/*/libremesh
-          local repo2=$PWD/$sdk/bin/packages/*/libremap
-          local repo3=$PWD/$sdk/bin/packages/*/limeui
-          echo "##LibreMesh" >> $ib/repositories.conf
-          echo "src libremesh file:$repo1" >> $ib/repositories.conf
-          echo "src libremap file:$repo2" >> $ib/repositories.conf
-          echo "src limeui file:$repo3" >> $ib/repositories.conf
+          echo "##SDK_repos" > $tmp_dir/repositories.conf
+          # TODO: check if it works for all platforms. Are the same dir names used?
+          for r in $PWD/$sdk/bin/packages/*/*; do
+            echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.conf
+          done
+          echo "src sdk_target file:$(find $PWD/$sdk/bin/targets -type d -name packages)" >> $tmp_dir/repositories.conf
+          echo "" >> $tmp_dir/repositories.conf
+          cat $ib/repositories.conf >> $tmp_dir/repositories.conf
+          cp -f $tmp_dir/repositories.conf $ib/repositories.conf
+          echo "-> Using custom $tmp_dir/repositories.conf"
         }
-    }
+    } || echo "-> Error compiling SDK"
 }
 
 download_feeds() {
