@@ -55,7 +55,9 @@ cook() {
         build_packets $target
     }
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
-    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" FILES="$PWD/$files_dir" && {
+    local ib_files=""
+    find $PWD/$files_dir/* 2>/dev/null && ib_files="FILES=$PWD/$files_dir" # if files/ directory is empty, IB crashes
+    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
       echo ""
       echo "-> Firmware for target $target, profile $profile and flavor $flavor cooked! Find the binaries in $output_dir directory" || {
       echo ""
