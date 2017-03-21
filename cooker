@@ -37,6 +37,10 @@ usage() {
     echo "    $0 -b ar71xx/generic"
     echo "    $0 -c ar71xx/generic --flavor=generic"
     echo ""
+    echo "Variable PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
+    echo ""
+    echo "    PKG=\"luci-app-3g iperf\" J=2 V=s $0 -c ar71xx/generic"
+    echo ""
 }
 
 list_targets() {
@@ -57,7 +61,7 @@ cook() {
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
     local ib_files=""
     find $PWD/$files_dir/* 2>/dev/null && ib_files="FILES=$PWD/$files_dir" # if files/ directory is empty, IB crashes
-    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
+    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
       echo ""
       echo "-> Firmware for target $target, profile $profile and flavor $flavor cooked! Find the binaries in $output_dir directory" || {
       echo ""
@@ -164,9 +168,11 @@ download_sdk_ib() {
     
     local sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$sdk_file"
-    wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file"
-    tar xf $tmp_dir/$sdk_file -C $output/
-    [ $? -eq 0 ] && {
+    wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file" || {
+        echo "-> Error, cannot download SDK $url/$sdk_file"
+        exit 1
+    }
+    tar xf $tmp_dir/$sdk_file -C $output/ && {
         [ -d $output/sdk ] && rm -rf $output/sdk
         mv $output/lede-sdk* $output/sdk
         rm -rf $output/sdk/dl
@@ -178,9 +184,11 @@ download_sdk_ib() {
     
     local ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$ib_file"
-    wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file"
-    tar xf $tmp_dir/$ib_file -C $output/
-    [ $? -eq 0 ] && {
+    wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file" || {
+        echo "-> Error, cannot download ImageBuilder $url/$ib_file"
+        exit 1
+    }
+     tar xf $tmp_dir/$ib_file -C $output/ && {
         [ -d $output/ib ] && rm -rf $output/ib
         mv $output/lede-imagebuilder* $output/ib
         rm -rf $output/ib/dl
