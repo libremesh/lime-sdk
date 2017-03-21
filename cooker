@@ -80,17 +80,23 @@ build_packets() {
         echo "-> Local feeds file not found"
         download_feeds
     }
+    cp -f "$feeds_file" "$sdk/feeds.conf"
     [ -z "$no_update" ] && (cd $sdk && scripts/feeds update -a)
-    (cd $sdk && scripts/feeds install -p libremesh -a)
-    (cd $sdk && scripts/feeds install -p libremap -a)
-    (cd $sdk && scripts/feeds install -p limeui -a)
-    (cd $sdk && scripts/feeds install libustream-openssl) # workaround for ustream-ssl uhttpd crash
+
+    for r in $sdk_install_repos; do
+        (cd $sdk && scripts/feeds install -p $r -a)
+    done
+    for p in $sdk_install_packages; do
+        (cd $sdk && scripts/feeds install $p)
+    done
+
     cp $sdk_config $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && {
         grep -q \#\#SDK_repos $ib/repositories.conf || {
           cat $ib/repositories.conf > $tmp_dir/repositories.conf
           echo "-> Linking IB with SDK"
+          echo "" >> $tmp_dir/repositories.conf
           echo "##SDK_repos" >> $tmp_dir/repositories.conf
           # TODO: check if it works for all platforms. Are the same dir names used?
           for r in $PWD/$sdk/bin/packages/*/*; do
