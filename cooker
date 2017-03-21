@@ -119,7 +119,7 @@ download_feeds() {
             url="$(echo $full_url | awk -F\; '{print $1}')"
             branch="$(echo $full_url | awk -F\; '{print $2}')"
             git clone $url -b $branch $output/$name
-            elif echo "$full_url" | grep \^; then
+        elif echo "$full_url" | grep \^; then
             url="$(echo $full_url | awk -F\^ '{print $1}')"
             commit="$(echo $full_url | awk -F\^ '{print $2}')"
             git clone $url $output/$name
@@ -127,18 +127,6 @@ download_feeds() {
         fi
         echo "src-link $name $PWD/$output/$name" >> $feeds_file
     done
-    
-    [ -d $output/libremesh ] && rm -rf $output/libremesh
-    git clone $lime_repo -b $lime_branch $output/libremesh
-    echo "src-link libremesh $PWD/$output/libremesh" >> $feeds_file
-    
-    [ -d $output/libremap ] && rm -rf $output/libremap
-    git clone $limap_repo -b $limap_branch $output/libremap
-    echo "src-link libremap $PWD/$output/libremap" >> $feeds_file
-    
-    [ -d $output/limeui ] && rm -rf $output/limeui
-    git clone $limeui_repo -b $limeui_branch $output/limeui
-    echo "src-link limeui $PWD/$output/limeui" >> $feeds_file
 }
 
 update_feeds() {
