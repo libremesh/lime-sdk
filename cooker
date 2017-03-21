@@ -4,6 +4,7 @@
 [ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 [ ! -d "$downloads_dir" ] && mkdir -p "$downloads_dir"
 [ ! -d "$bin_output" ] && mkdir -p "$bin_output"
+[ ! -d "$files_dir" ] && mkdir -p "$files_dir"
 J=${J:-$make_j}
 
 usage() {
@@ -50,7 +51,7 @@ cook() {
         build_packets $target
     }
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
-    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" && {
+    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor}" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" FILES="$PWD/$files_dir" && {
       echo ""
       echo "-> Firmware for target $target, profile $profile and flavor $flavor cooked! Find the binaries in $output_dir directory" || {
       echo ""
