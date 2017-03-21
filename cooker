@@ -87,15 +87,15 @@ build_packets() {
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && {
         grep -q \#\#SDK_repos $ib/repositories.conf || {
+          cat $ib/repositories.conf > $tmp_dir/repositories.conf
           echo "-> Linking IB with SDK"
-          echo "##SDK_repos" > $tmp_dir/repositories.conf
+          echo "##SDK_repos" >> $tmp_dir/repositories.conf
           # TODO: check if it works for all platforms. Are the same dir names used?
           for r in $PWD/$sdk/bin/packages/*/*; do
             echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.conf
           done
           echo "src sdk_target file:$(find $PWD/$sdk/bin/targets -type d -name packages)" >> $tmp_dir/repositories.conf
           echo "" >> $tmp_dir/repositories.conf
-          cat $ib/repositories.conf >> $tmp_dir/repositories.conf
           cp -f $tmp_dir/repositories.conf $ib/repositories.conf
           echo "-> Using custom $tmp_dir/repositories.conf"
         }
