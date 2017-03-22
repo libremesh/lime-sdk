@@ -9,7 +9,7 @@
 J=${J:-$make_j}
 
 usage() {
-    echo "Usage: $0 [-f ] [-d <target> [--sdk|ib]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
+    echo "Usage: $0 [-f ] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
                 [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
                 [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]"
@@ -26,6 +26,7 @@ usage() {
     echo "    -d <target>               : download SDK and ImageBuilder for specific target"
     echo "       --sdk                  : download only SDK"
     echo "       --ib                   : download only ImageBuilder"
+    echo "       --force                : force reinstall of SDK and/or ImageBuilder (remove old if exist)"
     echo "    -i <target>               : install local/custom SDK or ImageBuilder"
     echo "       --sdk-file=<file>      : specify SDK file to unpack"
     echo "       --ib-file=<file>       : specify ImageBuilder file to unpack"
@@ -198,17 +199,21 @@ download_sdk() {
 unpack_sdk() {
     local file="$1"
     local output="$2"
-    echo "-> Unpacking SDK to $output"
-    tar xf $file -C $output/ && {
-        [ -d $output/sdk ] && rm -rf $output/sdk
-        mv $output/lede-sdk* $output/sdk
-        rm -rf $output/sdk/dl
-        local dl=$downloads_dir
-        echo $dl | grep -q / || dl="$PWD/$dl"
-        ln -s $dl $output/sdk/dl
-        #rm -f $TMP/$SDK_FILE
-    } || echo "-> Error installing SDK"
-  }
+    [ -d $output/sdk ] && [ -z "$force_install" ] && {
+        echo "-> SDK for $target already exist, doing nothing. Use --force to reinstall"
+    } || {
+        echo "-> Unpacking SDK to $output"
+        tar xf $file -C $output/ && {
+            [ -d $output/sdk ] && rm -rf $output/sdk
+            mv $output/lede-sdk* $output/sdk
+            rm -rf $output/sdk/dl
+            local dl=$downloads_dir
+            echo $dl | grep -q / || dl="$PWD/$dl"
+            ln -s $dl $output/sdk/dl
+            #rm -f $TMP/$SDK_FILE
+        } || echo "-> Error installing SDK"
+    }
+}
 
 download_ib() {
     local target="$1"
@@ -226,22 +231,26 @@ download_ib() {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
         exit 1
     }
-    unpack_ib $tmp_dir/$ip_file $output
+    unpack_ib $tmp_dir/$ib_file $output
 }
 
 unpack_ib() {
      local file="$1"
      local output="$2"
-     echo "-> Unpacking ImageBuilder to $output"
-     tar xf $file -C $output/ && {
-        [ -d $output/ib ] && rm -rf $output/ib
-        mv $output/lede-imagebuilder* $output/ib
-        rm -rf $output/ib/dl
-        local dl=$downloads_dir
-        echo $dl | grep -q / || dl="$PWD/$dl"
-        ln -s $dl $output/ib/dl
-        #rm -f $TMP/$IB_FILE
-    } || echo "-> Error installing ImageBuilder"
+     [ -d $output/ib ] && [ -z "$force_install" ] && {
+        echo "-> ImageBuilder for $target already exist, doing nothing. Use --force to reinstall"
+     } || {
+        echo "-> Unpacking ImageBuilder to $output"
+        tar xf $file -C $output/ && {
+           [ -d $output/ib ] && rm -rf $output/ib
+           mv $output/lede-imagebuilder* $output/ib
+           rm -rf $output/ib/dl
+           local dl=$downloads_dir
+           echo $dl | grep -q / || dl="$PWD/$dl"
+           ln -s $dl $output/ib/dl
+           #rm -f $TMP/$IB_FILE
+       } || echo "-> Error installing ImageBuilder"
+    }
 }
 
 list_flavors() {
@@ -255,7 +264,7 @@ list_profiles() {
 
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
-update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help -n $0 -- "$@")
+update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -308,6 +317,10 @@ while true; do
         ;;
         --ib)
             only_ib=1
+            shift
+        ;;
+        --force)
+            force_install=1
             shift
         ;;
         -i)
