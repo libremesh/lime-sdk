@@ -8,38 +8,53 @@
 J=${J:-$make_j}
 
 usage() {
-    echo "Usage: $0 [-f ] [-d <target>] [-b <target> [--no-update]] [--download-all|build-all|update-feeds]"
-    echo "          [--targets|flavors|profiles=<target>] [-c <target> [--profile=<profile>] [--flavor=<flavor>]]"
+    echo "Usage: $0 [-f ] [-d <target> [--sdk|ib]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
+                    [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
+                    [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
+                    [-c <target> [--profile=<profile>] [--flavor=<flavor>]]"
     echo ""
     echo "    --download-all            : download all SDK and ImageBuilders"
     echo "    --build-all	              : build SDK for all available tagets"
     echo "    --cook-all	              : cook firmwares for all available targets (TBD)"
     echo "    --targets                 : list all officialy supported targets"
     echo "    --profiles=<target>       : list available hardware profiles for a specific target"
-    echo "    --profile=<profile>       : use <profile> when cooking firmware (default is all available target profiles)"
     echo "    --flavors                 : list available LibreMesh flavors for cooking"
-    echo "    --flavor=<flavor>         : use <flavor> when cooking firmware (default generic)"
     echo "    --update-feeds            : update previously downloaded feeds (only works for Git feeds)"
-    echo "    --no-update               : do not update feeds when building SDK"
     echo "    -f                        : download feeds based on feeds.conf.default file. Feeds will be shared among all targets"
-    echo "    -b <target>               : build specific target SDK"
-    echo "    -d <target>               : download SDK and IB for specific target"
+    echo "    -d <target>               : download SDK and ImageBuilder for specific target"
+    echo "       --sdk                  : download only SDK"
+    echo "       --ib                   : download only ImageBuilder"
+    echo "    -i <target>               : install local/custom SDK or ImageBuilder"
+    echo "       --sdk-file=<file>      : specify SDK file to unpack"
+    echo "       --ib-file=<file>       : specify ImageBuilder file to unpack"
+    echo "    -b <target>               : build SDK for specific target and link it to the ImageBuilder"
+    echo "       --no-link-ib           : do not download and link ImageBuilder when building the SDK"
+    echo "       --no-update            : do not update feeds when building SDK"
     echo "    -c <target>               : cook the firmware for specific target. Can be used with --profile and --flavor"
+    echo "       --profile=<profile>    : use <profile> when cooking firmware (default is all available target profiles)"
+    echo "       --flavor=<flavor>      : use <flavor> when cooking firmware (default generic)"
+    echo "       --remote               : instead of building local SDK packages. Use only remote repositories for cooking"
     echo ""
-    echo "Example of usage for building SDK and cooking firmware for target tl-wdr3500-v1 (all in one)"
+    echo "Examples:"
+    echo ""
+    echo " - Build packages using the SDK and cook the firmware for target tl-wdr3500-v1 and flavor generic (all in one command)"
     echo ""
     echo "    $0 -c ar71xx/generic --flavor=generic --profile=tl-wdr3500-v1"
     echo ""
-    echo "Example of usage for building SDK and cooking ar71xx target with all available profiles (step by step)"
+    echo " - Cook the firmware without compiling the SDK but using only remote precompiled binaries"
     echo ""
-    echo "    $0 -d ar71xx/generic"
-    echo "    $0 -f"
-    echo "    $0 -b ar71xx/generic"
-    echo "    $0 -c ar71xx/generic --flavor=generic"
+    echo "    $0 -c ar71xx/generic --remote --flavor=basic --profile=tl-wdr3500-v1"
     echo ""
-    echo "Variable PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
+    echo " - Build SDK and cook ar71xx target with all available profiles (step by step)"
     echo ""
-    echo "    PKG=\"luci-app-3g iperf\" J=2 V=s $0 -c ar71xx/generic"
+    echo "    $0 -d ar71xx/generic                    # download SDK and IB "
+    echo "    $0 -f                                   # download and prepare feeds"
+    echo "    $0 -b ar71xx/generic --no-update        # build the SDK and link it to IB"
+    echo "    $0 -c ar71xx/generic --flavor=generic   # cook the firmware"
+    echo ""
+    echo " - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
+    echo ""
+    echo "    PKG=\"luci-app-3g iperf\" J=4 V=s $0 -c ar71xx/generic"
     echo ""
 }
 
@@ -54,30 +69,29 @@ cook() {
     local ib="$release/$target/ib"
     local output_dir="$PWD/$bin_output/$target/$profile/$flavor"
 
-    [ ! -d "$ib" ] || ! grep -q \#\#SDK_repo $ib/repositories.conf && {
-        echo "-> ImageBuilder for target $target not rady"
-        build_packets $target
+    [ ! -d "$ib" ] || [ -z "$use_remote_pkgs" ] && ! grep -q \#\#SDK_repo $ib/repositories.conf && {
+        echo "-> ImageBuilder for target $target not ready"
+        download_ib $target
+        [ -z "$use_remote_pkgs" ] && build_sdk $target
     }
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
     local ib_files=""
     find $PWD/$files_dir/* 2>/dev/null && ib_files="FILES=$PWD/$files_dir" # if files/ directory is empty, IB crashes
     make -C $ib image PROFILE="$profile" PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
-      echo ""
-      echo "-> Firmware for target $target, profile $profile and flavor $flavor cooked! Find the binaries in $output_dir directory" || {
-      echo ""
-      echo "-> Firmware not cooked, something wrong on the ImageBuilder compilation process" 
+      echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
+      echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process" 
       }
     }
 }
 
-build_packets() {
+build_sdk() {
     local target="$1"
     local sdk="$release/$target/sdk"
     local ib="$release/$target/ib"
 
     [ ! -d "$sdk" ] && {
         echo "-> SDK for target $target not found"
-        download_sdk_ib $target
+        download_sdk $target
     }
     
     echo "-> Building $sdk"
@@ -98,7 +112,8 @@ build_packets() {
 
     cp $sdk_config $sdk/.config
     make -C $sdk defconfig
-    make -j$J -C $sdk V=$V && {
+    make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
+        [ -f "$ib/repositories.conf" ] || download_ib $target
         grep -q \#\#SDK_repos $ib/repositories.conf || {
           cat $ib/repositories.conf > $tmp_dir/repositories.conf
           echo "-> Linking IB with SDK"
@@ -148,14 +163,14 @@ update_feeds() {
 }
 
 build_all_sdk() {
-    cat $targets_list | while read t; do build_packets $t; done
+    cat $targets_list | while read t; do build_sdk $t; done
 }
 
 download_all() {
-    cat $targets_list | while read t; do download_sdk_ib $t; done
+    cat $targets_list | while read t; do download_sdk $t; download_ib $t; done
 }
 
-download_sdk_ib() {
+download_sdk() {
     local target="$1"
     [ -z "$target" ] && {
         echo "-> You must specify target to download, check $targets_list file"
@@ -172,7 +187,14 @@ download_sdk_ib() {
         echo "-> Error, cannot download SDK $url/$sdk_file"
         exit 1
     }
-    tar xf $tmp_dir/$sdk_file -C $output/ && {
+    unpack_sdk $tmp_dir/$sdk_file $output
+}
+
+unpack_sdk() {
+    local file="$1"
+    local output="$2"
+    echo "-> Unpacking SDK to $output"
+    tar xf $file -C $output/ && {
         [ -d $output/sdk ] && rm -rf $output/sdk
         mv $output/lede-sdk* $output/sdk
         rm -rf $output/sdk/dl
@@ -181,14 +203,32 @@ download_sdk_ib() {
         ln -s $dl $output/sdk/dl
         #rm -f $TMP/$SDK_FILE
     } || echo "-> Error installing SDK"
-    
+  }
+
+download_ib() {
+    local target="$1"
+    [ -z "$target" ] && {
+        echo "-> You must specify target to download, check $targets_list file"
+        usage
+        exit 1
+    }
+    local url="$base_url/$target"
+    local output="$release/$target"
+    [ ! -d "$output" ] && mkdir -p "$output"
     local ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$ib_file"
     wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file" || {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
         exit 1
     }
-     tar xf $tmp_dir/$ib_file -C $output/ && {
+    unpack_ib $tmp_dir/$ip_file $output
+}
+
+unpack_ib() {
+     local file="$1"
+     local output="$2"
+     echo "-> Unpacking ImageBuilder to $output"
+     tar xf $file -C $output/ && {
         [ -d $output/ib ] && rm -rf $output/ib
         mv $output/lede-imagebuilder* $output/ib
         rm -rf $output/ib/dl
@@ -209,7 +249,8 @@ list_profiles() {
 }
 
 [ -z "$1" ] && usage
-OPTS=`getopt -o hd:f:b:c: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,update-feeds,no-update -n $0 -- "$@"`
+OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
+update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file: -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -226,25 +267,51 @@ while true; do
             list_targets
             break
         ;;
-      --profiles)
+        --profiles)
             list_profiles $2
             break
         ;;
-      --flavors)
+        --flavors)
             list_flavors
             break
         ;;
-      --update-feeds)
+        --update-feeds)
             update_feeds
             break
         ;;
-      --no-update)
+        --no-update)
             no_update=1
             shift
         ;;
+        --no-link-ib)
+            no_link_ib=1
+            shift
+        ;;
         -d)
-            download_sdk_ib $2
-            break
+            download=1
+            target=$2
+            shift;shift
+        ;;
+        --sdk)
+            only_sdk=1
+            shift
+        ;;
+        --ib)
+            only_ib=1
+            shift
+        ;;
+        -i)
+            local_install=1
+            target=$2
+            shift;shift
+        ;;
+        --sdk-file)
+            sdk_path=$2
+            shift;shift
+        ;;
+        --ib-file)
+            ib_path=$2
+            shift;shift
         ;;
         -f)
             download_feeds
@@ -268,6 +335,10 @@ while true; do
             flavor="$2"
             shift;shift
         ;;
+      --remote)
+            use_remote_pkgs="1"
+            shift
+        ;;
         -h)
             usage
             break
@@ -281,7 +352,23 @@ while true; do
     esac
 done
 
-[ "$build_sdk" == "1" ] && build_packets $target
+
+[ "$local_install" == "1" ] && {
+  [ -n "$sdk_path" ] && unpack_sdk "$sdk_path" $release/$target
+  [ -n "$ib_path" ] && unpack_ib "$ib_path" $release/$target
+  [ -z "$sdk_path$ib_path" ] && {
+    echo "-> Either --sdk-file or --ib-file must be specified (or both)"
+    exit 1
+  }
+}
+
+[ "$download" == "1" ] && {
+    [ "$only_sdk" == "1" ] && download_sdk $target
+    [ "$only_ib" == "1" ] && download_ib $target
+    [ -z "$only_sdk$only_ib" ] && download_sdk $target && download_ib $target
+}
+
+[ "$build_sdk" == "1" ] && build_sdk $target
 
 [ "$cook" == "1" ] && {
     profile=${profile:-Default}
