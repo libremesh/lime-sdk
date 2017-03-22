@@ -56,7 +56,7 @@ examples() {
     echo ""
     echo "    $0 -d ar71xx/generic                    # download SDK and IB "
     echo "    $0 -f                                   # download and prepare feeds"
-    echo "    $0 -b ar71xx/generic --no-update        # build the SDK and link it to IB"
+    echo "    $0 -b ar71xx/generic                    # build the SDK and link it to IB"
     echo "    $0 -c ar71xx/generic --flavor=generic   # cook the firmware"
     echo ""
     echo " - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"

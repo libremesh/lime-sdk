@@ -44,7 +44,7 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
     
         ./cooker -d ar71xx/generic                    # download SDK and IB 
         ./cooker -f                                   # download and prepare feeds
-        ./cooker -b ar71xx/generic --no-update        # build the SDK and link it to IB
+        ./cooker -b ar71xx/generic                    # build the SDK and link it to IB
         ./cooker -c ar71xx/generic --flavor=generic   # cook the firmware
     
      - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose
