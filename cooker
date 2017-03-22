@@ -9,7 +9,7 @@
 J=${J:-$make_j}
 
 usage() {
-    echo "Usage: $0 [-f ] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
+    echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
                 [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
                 [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]"
@@ -23,6 +23,7 @@ usage() {
     echo "    --flavors                 : list available LibreMesh flavors for cooking"
     echo "    --update-feeds            : update previously downloaded feeds (only works for Git feeds)"
     echo "    -f                        : download feeds based on feeds.conf.default file. Feeds will be shared among all targets"
+    echo "       --force                : force reinstall of feeds (remove old if exist)"
     echo "    -d <target>               : download SDK and ImageBuilder for specific target"
     echo "       --sdk                  : download only SDK"
     echo "       --ib                   : download only ImageBuilder"
@@ -140,10 +141,16 @@ build_sdk() {
 download_feeds() {
     local feeds_template="$feeds_default_file"
     local output="$feeds_dir"
-    rm -f $feeds_file
+
+    [ -f "$feeds_file" ] && [ -z "$force_install" ] && {
+        echo "-> Feeds already downloaded, doing nothing. Use --force to reinstall"
+        return
+    }
+
+    [ -f $feeds_file ] && rm -f $feeds_file
     [ ! -d "$output" ] && mkdir -p "$output"
     echo "-> Downloading feeds into $output/"
-    
+
     cat $feeds_template | grep ^src-git | while read feed; do
         name="$(echo $feed | awk '{print $2}')"
         full_url="$(echo $feed | awk '{print $3}')"
