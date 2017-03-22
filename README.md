@@ -1,7 +1,7 @@
 # lime-sdk
 LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate LibreMesh packages and firmware.
 
-    Usage: ./cooker [-f ] [-d <target> [--sdk|ib]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
+    Usage: ./cooker [-f ] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                     [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
                     [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
                     [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]
@@ -18,6 +18,7 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
         -d <target>               : download SDK and ImageBuilder for specific target
            --sdk                  : download only SDK
            --ib                   : download only ImageBuilder
+           --force                : force reinstall of SDK and/or ImageBuilder (remove old if exist)
         -i <target>               : install local/custom SDK or ImageBuilder
            --sdk-file=<file>      : specify SDK file to unpack
            --ib-file=<file>       : specify ImageBuilder file to unpack
