@@ -1,6 +1,7 @@
 #!/bin/bash
-. options.conf
-. flavors.conf
+[ -f options.conf.local ] && . options.conf.local || . options.conf
+[ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
+
 [ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 [ ! -d "$downloads_dir" ] && mkdir -p "$downloads_dir"
 [ ! -d "$bin_output" ] && mkdir -p "$bin_output"
