@@ -9,10 +9,11 @@ J=${J:-$make_j}
 
 usage() {
     echo "Usage: $0 [-f ] [-d <target> [--sdk|ib]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
-                    [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
-                    [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
-                    [-c <target> [--profile=<profile>] [--flavor=<flavor>]]"
+                [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
+                [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
+                [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]"
     echo ""
+    echo "    --help                    : show full help with examples"
     echo "    --download-all            : download all SDK and ImageBuilders"
     echo "    --build-all	              : build SDK for all available tagets"
     echo "    --cook-all	              : cook firmwares for all available targets (TBD)"
@@ -35,6 +36,9 @@ usage() {
     echo "       --flavor=<flavor>      : use <flavor> when cooking firmware (default generic)"
     echo "       --remote               : instead of building local SDK packages. Use only remote repositories for cooking"
     echo ""
+}
+
+examples() {
     echo "Examples:"
     echo ""
     echo " - Build packages using the SDK and cook the firmware for target tl-wdr3500-v1 and flavor generic (all in one command)"
@@ -250,11 +254,16 @@ list_profiles() {
 
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
-update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file: -n $0 -- "$@")
+update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
     case $1 in
+        --help)
+            usage
+            examples
+            break
+        ;;
         --download-all)
             download_all
             break
