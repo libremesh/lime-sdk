@@ -108,7 +108,7 @@ build_sdk() {
         download_feeds
     }
     cp -f "$feeds_file" "$sdk/feeds.conf"
-    [ -z "$no_update" ] && (cd $sdk && scripts/feeds update -a)
+    [ -z "$no_update" ] && (cd $sdk && scripts/feeds update -a) || (cd $sdk && scripts/feeds update -i)
 
     for r in $sdk_install_repos; do
         (cd $sdk && scripts/feeds install -p $r -a)
