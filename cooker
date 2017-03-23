@@ -344,8 +344,8 @@ while true; do
             shift;shift
         ;;
         -f)
-            download_feeds
-            break
+            download_feeds=1
+            shift
         ;;
         -b)
             build_sdk=1
@@ -396,6 +396,10 @@ done
     [ "$only_sdk" == "1" ] && download_sdk $target
     [ "$only_ib" == "1" ] && download_ib $target
     [ -z "$only_sdk$only_ib" ] && download_sdk $target && download_ib $target
+}
+
+[ "$download_feeds" == "1" ] && {
+    download_feeds
 }
 
 [ "$build_sdk" == "1" ] && build_sdk $target
