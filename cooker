@@ -11,33 +11,35 @@ J=${J:-$make_j}
 usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
-                [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
-                [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]"
+                [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
+                [-c <target> [--profile=<profile>] [--flavor=<flavor>] [--community=<name/profile>]] [--help]"
     echo ""
-    echo "    --help                    : show full help with examples"
-    echo "    --download-all            : download all SDK and ImageBuilders"
-    echo "    --build-all	              : build SDK for all available tagets"
-    echo "    --cook-all	              : cook firmwares for all available targets (TBD)"
-    echo "    --targets                 : list all officialy supported targets"
-    echo "    --profiles=<target>       : list available hardware profiles for a specific target"
-    echo "    --flavors                 : list available LibreMesh flavors for cooking"
-    echo "    --update-feeds            : update previously downloaded feeds (only works for Git feeds)"
-    echo "    -f                        : download feeds based on feeds.conf.default file. Feeds will be shared among all targets"
-    echo "       --force                : force reinstall of feeds (remove old if exist)"
-    echo "    -d <target>               : download SDK and ImageBuilder for specific target"
-    echo "       --sdk                  : download only SDK"
-    echo "       --ib                   : download only ImageBuilder"
-    echo "       --force                : force reinstall of SDK and/or ImageBuilder (remove old if exist)"
-    echo "    -i <target>               : install local/custom SDK or ImageBuilder"
-    echo "       --sdk-file=<file>      : specify SDK file to unpack"
-    echo "       --ib-file=<file>       : specify ImageBuilder file to unpack"
-    echo "    -b <target>               : build SDK for specific target and link it to the ImageBuilder"
-    echo "       --no-link-ib           : do not download and link ImageBuilder when building the SDK"
-    echo "       --no-update            : do not update feeds when building SDK"
-    echo "    -c <target>               : cook the firmware for specific target. Can be used with --profile and --flavor"
-    echo "       --profile=<profile>    : use <profile> when cooking firmware (default is all available target profiles)"
-    echo "       --flavor=<flavor>      : use <flavor> when cooking firmware (default generic)"
-    echo "       --remote               : instead of building local SDK packages. Use only remote repositories for cooking"
+    echo "    --help                     : show full help with examples"
+    echo "    --download-all             : download all SDK and ImageBuilders"
+    echo "    --build-all	               : build SDK for all available tagets"
+    echo "    --cook-all	               : cook firmwares for all available targets (TBD)"
+    echo "    --targets                  : list all officialy supported targets"
+    echo "    --profiles=<target>        : list available hardware profiles for a specific target"
+    echo "    --flavors                  : list available LibreMesh flavors for cooking"
+    echo "    --communities              : list available community profiles"
+    echo "    --update-feeds             : update previously downloaded feeds (only works for Git feeds)"
+    echo "    -f                         : download feeds based on feeds.conf.default file. Feeds will be shared among all targets"
+    echo "       --force                 : force reinstall of feeds (remove old if exist)"
+    echo "    -d <target>                : download SDK and ImageBuilder for specific target"
+    echo "       --sdk                   : download only SDK"
+    echo "       --ib                    : download only ImageBuilder"
+    echo "       --force                 : force reinstall of SDK and/or ImageBuilder (remove old if exist)"
+    echo "    -i <target>                : install local/custom SDK or ImageBuilder"
+    echo "       --sdk-file=<file>       : specify SDK file to unpack"
+    echo "       --ib-file=<file>        : specify ImageBuilder file to unpack"
+    echo "    -b <target>                : build SDK for specific target and link it to the ImageBuilder"
+    echo "       --no-link-ib            : do not download and link ImageBuilder when building the SDK"
+    echo "       --no-update             : do not update feeds when building SDK"
+    echo "    -c <target>                : cook the firmware for specific target. Can be used with --profile and --flavor"
+    echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
+    echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default generic)"
+    echo "       --remote                : instead of building local SDK packages. Use only remote repositories for cooking"
+    echo "       --community=<name/prof> : specify which network community and profile device to use (if any)"
     echo ""
 }
 
@@ -58,6 +60,10 @@ examples() {
     echo "    $0 -f                                       # download and prepare feeds"
     echo "    $0 -b ar71xx/generic                        # build the SDK and link it to IB"
     echo "    $0 -c ar71xx/generic --flavor=lime_default  # cook the firmware"
+    echo ""
+    echo " - If you want to use an existing community network profile, specify it when cooking (in addition to the device profile)"
+    echo ""
+    echo "    $0 -c ar71xx/generic --flavor=lime_default --community=quintanalibre.org.ar/comun --profile=tl-wdr3500-v1"
     echo ""
     echo " - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
     echo ""
@@ -83,7 +89,9 @@ cook() {
     }
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
     local ib_files=""
-    find $PWD/$files_dir/* 2>/dev/null && ib_files="FILES=$PWD/$files_dir" # if files/ directory is empty, IB crashes
+    local myfiles="$PWD/$files_dir"
+    [ -n "$community_files" ] && myfiles="$community_files"
+    find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
     make -C $ib image PROFILE="$profile" PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
       echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process" 
@@ -167,6 +175,22 @@ download_feeds() {
         fi
         echo "src-link $name $PWD/$output/$name" >> $feeds_file
     done
+}
+
+download_communities() {
+    [ ! -d "$communities_dir" ] && {
+        echo "-> Downloading communities repository"
+        git clone $communities_git $communities_dir || {
+            echo "-> Cannot fetch communities repository"
+            exit 1
+        }
+    }
+}
+
+list_communities() {
+    download_communities
+    find $communities_dir/ -maxdepth 1 -type d | grep -v .git | \
+      while read c; do echo ${c#*/}; done | grep -v ^$
 }
 
 update_feeds() {
@@ -271,7 +295,8 @@ list_profiles() {
 
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
-update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force -n $0 -- "$@")
+update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,\
+communities,community: -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -299,6 +324,10 @@ while true; do
         ;;
         --flavors)
             list_flavors
+            break
+        ;;
+        --communities)
+            list_communities
             break
         ;;
         --update-feeds)
@@ -369,6 +398,11 @@ while true; do
             use_remote_pkgs="1"
             shift
         ;;
+      --community)
+            community="${2%/*}"
+            community_profile="${2#*/}"
+            shift;shift
+        ;;
         -h)
             usage
             break
@@ -407,6 +441,17 @@ done
 [ "$cook" == "1" ] && {
     profile=${profile:-Default}
     flavor=${flavor:-generic}
+    [ -n "$community" ] && [ -z "$community_profile" ] && {
+        echo "-> If community is defined you must also specify its profile: --community=name/profile"
+        exit 0
+    } || {
+        download_communities
+        community_files="$PWD/$communities_dir/$community/$community_profile"
+        [ ! -d "$community_files" ] && {
+            echo "-> The community and profile specified does not exist ($community_files)"
+            exit 0
+        } || echo "-> Using Community files from $community_files"
+    }
     cook $target $profile $flavor
 }
 

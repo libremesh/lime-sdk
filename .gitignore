@@ -6,3 +6,4 @@ feeds.conf
 output
 files
 *.local
+communities/
