@@ -1,7 +1,7 @@
 # lime-sdk
 LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate LibreMesh packages and firmware.
 
-    Usage: ./cooker [-f ] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
+    Usage: ./cooker [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                     [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
                     [--download-all|build-all|update-feeds] [--targets|flavors|profiles=<target>] 
                     [-c <target> [--profile=<profile>] [--flavor=<flavor>]] [--help]
@@ -15,6 +15,7 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
         --flavors                 : list available LibreMesh flavors for cooking
         --update-feeds            : update previously downloaded feeds (only works for Git feeds)
         -f                        : download feeds based on feeds.conf.default file. Feeds will be shared among all targets
+           --force                : force reinstall of feeds (remove old if exist)
         -d <target>               : download SDK and ImageBuilder for specific target
            --sdk                  : download only SDK
            --ib                   : download only ImageBuilder
@@ -34,21 +35,21 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
     
      - Build packages using the SDK and cook the firmware for target tl-wdr3500-v1 and flavor generic (all in one command)
     
-        ./cooker -c ar71xx/generic --flavor=generic --profile=tl-wdr3500-v1
+        ./cooker -c ar71xx/generic --flavor=lime_default --profile=tl-wdr3500-v1
     
      - Cook the firmware without compiling the SDK but using only remote precompiled binaries
     
-        ./cooker -c ar71xx/generic --remote --flavor=basic --profile=tl-wdr3500-v1
+        ./cooker -c ar71xx/generic --remote --flavor=lime_basic --profile=tl-wdr3500-v1
     
      - Build SDK and cook ar71xx target with all available profiles (step by step)
     
-        ./cooker -d ar71xx/generic                    # download SDK and IB 
-        ./cooker -f                                   # download and prepare feeds
-        ./cooker -b ar71xx/generic                    # build the SDK and link it to IB
-        ./cooker -c ar71xx/generic --flavor=generic   # cook the firmware
+        ./cooker -d ar71xx/generic                        # download SDK and IB 
+        ./cooker -f                                       # download and prepare feeds
+        ./cooker -b ar71xx/generic                        # build the SDK and link it to IB
+        ./cooker -c ar71xx/generic --flavor=lime_default  # cook the firmware
     
      - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose
     
         PKG="luci-app-3g iperf" J=4 V=s ./cooker -c ar71xx/generic
 
-Status: Alpha
+Status: Beta

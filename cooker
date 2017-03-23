@@ -46,18 +46,18 @@ examples() {
     echo ""
     echo " - Build packages using the SDK and cook the firmware for target tl-wdr3500-v1 and flavor generic (all in one command)"
     echo ""
-    echo "    $0 -c ar71xx/generic --flavor=generic --profile=tl-wdr3500-v1"
+    echo "    $0 -c ar71xx/generic --flavor=lime_default --profile=tl-wdr3500-v1"
     echo ""
     echo " - Cook the firmware without compiling the SDK but using only remote precompiled binaries"
     echo ""
-    echo "    $0 -c ar71xx/generic --remote --flavor=basic --profile=tl-wdr3500-v1"
+    echo "    $0 -c ar71xx/generic --remote --flavor=lime_basic --profile=tl-wdr3500-v1"
     echo ""
     echo " - Build SDK and cook ar71xx target with all available profiles (step by step)"
     echo ""
-    echo "    $0 -d ar71xx/generic                    # download SDK and IB "
-    echo "    $0 -f                                   # download and prepare feeds"
-    echo "    $0 -b ar71xx/generic                    # build the SDK and link it to IB"
-    echo "    $0 -c ar71xx/generic --flavor=generic   # cook the firmware"
+    echo "    $0 -d ar71xx/generic                        # download SDK and IB "
+    echo "    $0 -f                                       # download and prepare feeds"
+    echo "    $0 -b ar71xx/generic                        # build the SDK and link it to IB"
+    echo "    $0 -c ar71xx/generic --flavor=lime_default  # cook the firmware"
     echo ""
     echo " - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
     echo ""
@@ -261,7 +261,7 @@ unpack_ib() {
 }
 
 list_flavors() {
-    cat flavors.conf | egrep -v "^_" | awk -F= '{print $1}'
+    cat flavors.conf | egrep -v "^_|^#|^$" | awk -F= '{print $1}'
 }
 
 list_profiles() {
