@@ -1,4 +1,4 @@
-src-git base https://git.lede-project.org/source.git;v17.01.0
+src-git base https://github.com/lede-project/source.git;v17.01.0
 src-git packages https://git.lede-project.org/feed/packages.git^ed90827282851ad93294e370860320f1af428bb2
 src-git luci https://git.lede-project.org/project/luci.git^a100738163585ae1edc24d832ca9bef1f34beef0
 src-git routing https://git.lede-project.org/feed/routing.git;lede-17.01
