@@ -35,9 +35,9 @@ usage() {
     echo "    -b <target>                : build SDK for specific target and link it to the ImageBuilder"
     echo "       --no-link-ib            : do not download and link ImageBuilder when building the SDK"
     echo "       --no-update             : do not update feeds when building SDK"
-    echo "    -c <target>                : cook the firmware for specific target. Can be used with --profile and --flavor"
+    echo "    -c <target>                : cook the firmware for specific target. Can be used with next options"
     echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
-    echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default generic)"
+    echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
     echo "       --remote                : instead of building local SDK packages. Use only remote repositories for cooking"
     echo "       --community=<name/prof> : specify which network community and profile device to use (if any)"
     echo ""
@@ -444,7 +444,7 @@ done
 
 [ "$cook" == "1" ] && {
     profile=${profile:-Default}
-    flavor=${flavor:-generic}
+    flavor=${flavor:-$default_flavor}
     [ -n "$community" ] && [ -z "$community_profile" ] && {
         echo "-> If community is defined you must also specify its profile: --community=name/profile"
         exit 0
