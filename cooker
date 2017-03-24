@@ -87,12 +87,16 @@ cook() {
         download_ib $target
         [ -z "$use_remote_pkgs" ] && build_sdk $target
     }
+
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
     local ib_files=""
     local myfiles="$PWD/$files_dir"
     [ -n "$community_files" ] && myfiles="$community_files"
+    local fw_extra_name="libremesh"
+    [ -n "$community" ] && fw_extra_name="$community-$community_profile"
+
     find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
-    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="libremesh" BIN_DIR="$output_dir" $ib_files && {
+    make -C $ib image PROFILE="$profile" PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files && {
       echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process" 
       }
