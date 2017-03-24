@@ -27,12 +27,13 @@ LibreMesh software development kit. Uses Lede SDK and ImageBuilder to generate L
         -b <target>                : build SDK for specific target and link it to the ImageBuilder
            --no-link-ib            : do not download and link ImageBuilder when building the SDK
            --no-update             : do not update feeds when building SDK
-        -c <target>                : cook the firmware for specific target. Can be used with --profile and --flavor
+        -c <target>                : cook the firmware for specific target. Can be used with next options
            --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)
-           --flavor=<flavor>       : use <flavor> when cooking firmware (default generic)
+           --flavor=<flavor>       : use <flavor> when cooking firmware (default lime_default)
            --remote                : instead of building local SDK packages. Use only remote repositories for cooking
            --community=<name/prof> : specify which network community and profile device to use (if any)
-    
+
+
     Examples:
     
      - Build packages using the SDK and cook the firmware for target tl-wdr3500-v1 and flavor generic (all in one command)
