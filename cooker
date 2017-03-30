@@ -345,8 +345,8 @@ while true; do
             break
         ;;
         --cook-all)
-            cook_all_targets
-            break
+            cook_all=1
+            shift
         ;;
         --targets)
             list_targets
@@ -450,6 +450,7 @@ while true; do
     esac
 done
 
+flavor=${flavor:-$default_flavor}
 
 [ "$local_install" == "1" ] && {
   [ -n "$sdk_path" ] && unpack_sdk "$sdk_path" $release/$target
@@ -473,7 +474,6 @@ done
 [ "$build_sdk" == "1" ] && build_sdk $target
 
 [ "$cook" == "1" ] && {
-    flavor=${flavor:-$default_flavor}
     profile=${profile:-Default}
     [ -n "$community" ] && [ -z "$community_profile" ] && {
         echo "-> If community is defined you must also specify its profile: --community=name/profile"
@@ -493,3 +493,6 @@ done
     fi
 }
 
+[ "$cook_all" == "1" ] && {
+    cook_all_targets
+}
