@@ -94,6 +94,7 @@ cook() {
     local fw_extra_name="libremesh"
     [ -n "$community" ] && fw_extra_name="$community-$community_profile"
     find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
+    [ "$profile" == "Default" ] && profile="" # if profile is Default better leave it blank. some targets do not have any profile
     [ -n "$profile" ] && profile="PROFILE=$profile"
     [ -n "$NO_UPDATE" ] && force_no_update="NO_UPDATE=1"
     make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update && {
@@ -311,8 +312,10 @@ list_flavors() {
 }
 
 get_profile_names() {
-    cat $release/$target/ib/.profiles.mk | grep ^PROFILE_NAMES | \
-	 sed -e s/"PROFILE_NAMES = Default"//g -e s/DEVICE_//g
+    local profiles="$(cat $release/$target/ib/.profiles.mk 2>/dev/null | grep ^PROFILE_NAMES | \
+      sed -e s/"PROFILE_NAMES = Default"//g -e s/DEVICE_//g)"
+    profiles="${profiles:-Default}"
+    echo "$profiles"
 }
 
 list_profiles() {
@@ -471,7 +474,7 @@ done
 
 [ "$cook" == "1" ] && {
     flavor=${flavor:-$default_flavor}
-    profile=${profile:-all}
+    profile=${profile:-Default}
     [ -n "$community" ] && [ -z "$community_profile" ] && {
         echo "-> If community is defined you must also specify its profile: --community=name/profile"
         exit 0
@@ -483,8 +486,8 @@ done
             exit 0
         } || echo "-> Using Community files from $community_files"
     }
-    if [ "$profile" == "all" ]; then
-      cook_all_profiles $targets
+    if [ "$profile" == "Default" ]; then
+      cook_all_profiles $target
     else
       cook $target $profile
     fi
