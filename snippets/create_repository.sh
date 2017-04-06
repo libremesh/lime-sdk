@@ -8,7 +8,9 @@ for link in $OUTDIR/*; do
 done
 for target in $(cat $targets_list); do
   for arch in $release/$target/sdk/bin/packages/*; do
-    echo "-> Creating symlink for $arch"
-    ln -s $PWD/$arch $OUTDIR/ 2>/dev/null
+    [ -d "$arch" ] && {
+      echo "-> Creating symlink for $arch"
+      ln -s $PWD/$arch $OUTDIR/ 2>/dev/null
+    }
   done
 done
