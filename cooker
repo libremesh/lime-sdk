@@ -1,4 +1,4 @@
-#!/bin/bash
+#st_!/bin/bash
 [ -f options.conf.local ] && . options.conf.local || . options.conf
 [ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
 
@@ -81,11 +81,22 @@ cook() {
     local ib="$release/$target/ib"
     local output_dir="$PWD/$bin_output/$target/$profile/$flavor"
 
-    [ ! -d "$ib" ] || [ -z "$use_remote_pkgs" ] && ! grep -q \#\#SDK_repo $ib/repositories.conf && {
+    [ ! -d "$ib" ] && {
         echo "-> ImageBuilder for target $target not ready"
         download_ib $target
-        [ -z "$use_remote_pkgs" ] && build_sdk $target
     }
+
+    [ -n "$use_remote_pkgs" ] && {
+        local arch=`get_arch_from_ib $target`
+        echo "-> Using remote repository for ImageBuilder, architecture: $arch"
+        cat $ib/repositories.original.conf $remote_pkg_repos | sed s/"{ARCH}"/$arch/g > $ib/repositories.conf
+    }
+
+    [ -z "$use_remote_pkgs" ] && {
+        [ ! -f $ib/repositories.sdk.conf ] && build_sdk $target
+        cp -f $ib/repositories.sdk.conf $ib/repositories.conf
+    }
+
     echo "-> Cooking $target/$profile"
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
     local ib_files=""
@@ -153,19 +164,19 @@ build_sdk() {
     cp $sdk_config $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
-        [ -f "$ib/repositories.conf" ] || download_ib $target
-        grep -q \#\#SDK_repos $ib/repositories.conf || {
-          cat $ib/repositories.conf > $tmp_dir/repositories.conf
+        [ -f "$ib/repositories.original.conf" ] || download_ib $target
+        [ -f "$ib/repositories.sdk.conf" ] || {
+          cat $ib/repositories.original.conf > $tmp_dir/repositories.sdk.conf
           echo "-> Linking IB with SDK"
-          echo "" >> $tmp_dir/repositories.conf
-          echo "##SDK_repos" >> $tmp_dir/repositories.conf
+          echo "" >> $tmp_dir/repositories.sdk.conf
+          echo "##SDK_repos" >> $tmp_dir/repositories.sdk.conf
           for r in $PWD/$sdk/bin/packages/*/*; do
-            echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.conf
+            echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.sdk.conf
           done
-          echo "src sdk_target file:$(find $PWD/$sdk/bin/targets -type d -name packages)" >> $tmp_dir/repositories.conf
-          echo "" >> $tmp_dir/repositories.conf
-          cp -f $tmp_dir/repositories.conf $ib/repositories.conf
-          echo "-> Using custom $tmp_dir/repositories.conf"
+          echo "src sdk_target file:$(find $PWD/$sdk/bin/targets -type d -name packages)" >> $tmp_dir/repositories.sdk.conf
+          echo "" >> $tmp_dir/repositories.sdk.conf
+          cp -f $tmp_dir/repositories.sdk.conf $ib/repositories.sdk.conf
+          echo "-> Using custom $tmp_dir/repositories.sdk.conf"
         }
     } || echo "-> Error compiling SDK"
 }
@@ -299,6 +310,7 @@ unpack_ib() {
         tar xf $file -C $output/ && {
            [ -d $output/ib ] && rm -rf $output/ib
            mv $output/lede-imagebuilder* $output/ib
+           cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
     }
 }
@@ -314,8 +326,15 @@ get_profile_names() {
     echo "$profiles"
 }
 
+get_arch_from_ib() {
+    local target=$1
+    [ ! -d $release/$target/ib ] && download_ib $target
+    grep CONFIG_TARGET_ARCH_PACKAGES $release/$target/ib/.config | cut -d= -f2 | tr -d \"
+}
+
 list_profiles() {
     local target="$1"
+    [ ! -d $release/$target/ib ] && download_ib $target
     make -C $release/$target/ib info
 }
 
