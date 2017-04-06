@@ -1,4 +1,4 @@
-#st_!/bin/bash
+#!/bin/bash
 [ -f options.conf.local ] && . options.conf.local || . options.conf
 [ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
 
