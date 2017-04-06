@@ -1,4 +1,4 @@
-#!/bin/bash
+#st_!/bin/bash
 [ -f options.conf.local ] && . options.conf.local || . options.conf
 [ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
 
@@ -316,6 +316,7 @@ get_profile_names() {
 
 list_profiles() {
     local target="$1"
+    [ ! -d $release/$target/ib ] && download_ib $target
     make -C $release/$target/ib info
 }
 
