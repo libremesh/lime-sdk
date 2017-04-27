@@ -2,30 +2,36 @@
 LibreMesh **software development kit** uses the [LEDE](https://lede-project.org/docs/start) SDK and ImageBuilder to generate (**cook**) LibreMesh packages and firmware. If you want to create your own LibreMesh flavor because you need some specific configuration or you just want to have control over your binaries, the cooker is your friend!
 
 Basic usage example for cooking a firmware for TpLink 4300:
+
 `./cooker -c ar71xx/generic --flavor=lime_default --profile=tl-wdr4300-v1`
 
 ## Targets, profiles and flavors
 LibreMesh can be used on many different devices (target and profile) and can be packed in many different ways (flavors), depending on your needs. To this end, it is important to choose the right options for building your firmware.
 
 To generate a firmware, the _-c_ option must be used (**c**ook). But it requires to specify at least the target and subtarget of your router and optionally (recommended) the profile and flavor.
+
 `./cooker -c <target/subtarget> --profile=<profile name> --flavor=<flavor name>`
 
 For instance, this will work for a TpLink WDR4300:
+
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default`
 
 ##### Target 
 Target references to the router architecture, usually depends on the manufactor and the set of chips used for building the hardware. Therefore, you must know the target and subtarget before using cooker. As we use LEDE, this information can be found here https://lede-project.org/toh/start. The most common targets are currently _ar71xx/generic_ (Atheros) and _ramips/mt7620_ (Ramips). Once we know the target, we must find the specific profile.
 
 To see the list of available targets execute:
+
 `./cooker --targets`
 
 ##### Profile
 The profile is the specific brand/model of the router. Each target has a list of hardware profiles than can be choosed. Cooker build all profiles from a target by default, but it is better if your find and choose the specific profile.
 
 To see the list of available profiles for a specific target execute: 
+
 `./cooker --profiles=<target/subtarget>`
 
 For instance: 
+
 `./cooker --profiles=ar71xx/generic`
 
 ##### Flavor
@@ -34,6 +40,7 @@ LibreMesh is a modular system, so it can be cooked on many different ways. There
 One of the most important things regarding the flavor is the internal flash size of your router. This must be taken into account when choosing a flavor.
 
 Currently there are three main flavors:
+
   * **lime_default:** the recommended for routers with more than 4MB of flash. It includes all required and optional software.
   * **lime_mini:** the recommended for routers of 4MB, made for end-users, includes a minimal web interface, but new software cannot be installed (opkg is not available).
   * **lime_zero:** for advanced users, it does not include web interface, just the basic software to mesh the network but it does include opkg, so new software can be installed.
@@ -42,7 +49,9 @@ Currently there are three main flavors:
 These are two different steps. **Building** means to compile and prepare all the required packages for LibreMesh. To **cook** means taking the packages (depending on the flavor) and generating the firmware ready to install on your device.
 
 The standard steps to generate a firmware would be: firstly build and secondly cook, like this:
+
 `./cooker -b ar71xx/generic`
+
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default`
 
 However, cooker is smart enough to detect the missing steps and transparently execute them. If we choose to cook before building, it will automatically build before cooking. Therefore, for debugging purposes it is better to execute the steps separately.
@@ -62,9 +71,11 @@ A community is mainly a set of files you want to include in the output firmware.
 Also _/etc/shadow_ for setting an initial root password or _/etc/uci-defaults/_ one-time executed scripts might be useful for your setup.
 
 The default way to create or use a community is to use this Git repository https://github.com/libremesh/network-profiles (ask for writing access in the users mailing list). The directory structure of the Git repository is: 
+
 `/<community name>/<device profile name>/<files and directories>`
 
 Both community and device profile names can be any of your choice (must exist!) , since they are only used for identifying it. When executing a cook order, you can specify the community profile like this:
+
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --community=CommunityName/ProfileName`
 
 ## Advanced help
