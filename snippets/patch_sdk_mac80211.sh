@@ -4,7 +4,7 @@
 patch_dir="$feeds_dir/base"
 patch_file="mac80211-backports.patch"
 
-cat > $patch_dir/$patch_file << EOF
+echo '
 From 135bfb1154b7afa7a814bfeb780b82563c8d0da9 Mon Sep 17 00:00:00 2001
 From: Nick Lowe <nick.lowe@gmail.com>
 Date: Mon, 27 Mar 2017 10:50:23 +0100
@@ -228,8 +228,7 @@ index 6fb902e376..32c09c647b 100644
  	json_get_values bssid_blacklist bssid_blacklist
 -- 
 2.12.2
-
-EOF
+' > $patch_dir/$patch_file
 
 [ ! -f $patch_dir/$patch_file ] && echo "-> Patch $patch_dir/$patch_file not found" && exit 1
 (cd $patch_dir  && git apply $patch_file) && echo "Patches applied"
