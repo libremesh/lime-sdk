@@ -138,3 +138,30 @@ Both community and device profile names can be any of your choice (must exist!) 
     
         PKG="luci-app-3g iperf" J=4 V=s ./cooker -c ar71xx/generic
 
+## Using development branch
+
+If you want to get the last LEDE source because it includes some new feature or it supports some new hardware, you can use the lime-sdk branch named _develop_. However as LEDE source is changing daily, we cannot assure the correct working of the firmware.
+It is recommended to start with a new Git clone instead of reuse an existing one. Once the lime-sdk source is cloned, change the branch: `git checkout develop`
+
+
+## Forking lime-sdk for your community
+
+If you like to manage your own set of flavors, options and/or repositories, you might fork the lime-sdk code to your own Git repository. To preserve the compatibility with the official source (so merges can be easily done), none of the original files must be modified.
+
+To this end, _cooker_ will look first for the files named _.local_ and will use them instead. Therefore make a copy of _options_ and _flavors_.
+
+    cp options.conf options.conf.local
+    cp flavors.conf flavors.conf.local
+
+Modify them as your own wish and add them to the Git repository.
+
+    git add *.local
+    git commit -m 'Add local options and flavors'
+    git push
+
+Time to time, if you want to update the code with the official one you might add a new remote and perform a merge.
+
+    git remote add official https://github.com/libremesh/lime-sdk.git
+    git fetch official
+    git merge official/master
+    git push origin/master
