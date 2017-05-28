@@ -113,17 +113,21 @@ cook() {
       echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
       ERROR_PROFILES="$ERROR_PROFILES $target/$profile/$flavor"
+      return 1
       }
     }
 }
 
 cook_all_profiles() {
     local target=$1
-    echo "--> Cooking ALL profiles"
+    echo -n -e "\n-> Cooking ALL profiles for target $target"
     local first=1
     for p in `get_profile_names`; do
       [ $first -eq 1 ] && first=0 || no_update=1
-      cook $target $p
+      local log="$tmp_dir/$(echo $target.$p | sed s/"\/"/-/g).log"
+      echo -n -e "\n--> Cooking $target $p"
+      (cook $target $p &> $log) && {
+        echo -n ": SUCCESS!"; } || echo -n ": FAIL! (log at $log)"
     done
     [ -n "$ERROR_PROFILES" ] && echo "-> Profiles with errors: $ERROR_PROFILES"
 }
