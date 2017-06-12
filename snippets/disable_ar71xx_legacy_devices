@@ -1,4 +1,0 @@
-#!/bin/bash
-# Some legacy profiles are crashing because flash size is not big enough
-# If not disabled it's not possible to build the standard firmware for all devices
-sed -i s/"\(^include.*legacy.*\)"/"#\1"/g 17.01.0/ar71xx/generic/ib/target/linux/ar71xx/image/Makefile
