@@ -1,5 +1,6 @@
 #!/bin/bash
-RELEASE="17.01.0"
+. options.conf
+RELEASE="$release"
 
 echo '--- Makefile2	2017-03-30 07:44:01.402299190 +0300
 +++ Makefile	2017-03-30 07:43:19.065015108 +0300

@@ -175,9 +175,15 @@ build_sdk() {
           echo "" >> $tmp_dir/repositories.sdk.conf
           echo "##SDK_repos" >> $tmp_dir/repositories.sdk.conf
           for r in $PWD/$sdk/bin/packages/*/*; do
+            case $r in
+            # we build the master branch of the routing feed, hence
+            # don't include it in the filter
+            *base | *luci | *packages | *telephony)
+              continue
+              ;;
+            esac
             echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.sdk.conf
           done
-          echo "src sdk_target file:$(find $PWD/$sdk/bin/targets -type d -name packages)" >> $tmp_dir/repositories.sdk.conf
           echo "" >> $tmp_dir/repositories.sdk.conf
           cp -f $tmp_dir/repositories.sdk.conf $ib/repositories.sdk.conf
           echo "-> Using custom $tmp_dir/repositories.sdk.conf"
