@@ -165,7 +165,7 @@ build_sdk() {
         (cd $sdk && scripts/feeds install $p)
     done
 
-    cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config}.local $sdk/.config
+    cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
         [ -f "$ib/repositories.original.conf" ] || download_ib $target
