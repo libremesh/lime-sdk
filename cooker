@@ -323,6 +323,7 @@ unpack_ib() {
            [ -d $output/ib ] && rm -rf $output/ib
            mv $output/lede-imagebuilder* $output/ib
            cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
+           sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
     }
 }
