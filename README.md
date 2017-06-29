@@ -147,6 +147,52 @@ Both community and device profile names can be any of your choice (must exist!) 
 If you want to get the last LEDE source because it includes some new feature or it supports some new hardware, you can use the lime-sdk branch named _develop_. However as LEDE source is changing daily, we cannot assure the correct working of the firmware.
 It is recommended to start with a new Git clone instead of reuse an existing one. Once the lime-sdk source is cloned, change the branch: `git checkout develop`
 
+## Add your own feed repository
+
+If you want to compile and/or cook your own feed package repository, you can follow one of the following methods.
+
+##### For a permanent build environment
+
+If it is a permanent change on your cooker setup, better add your repository (or modify the existing ones) to the feeds file
+
+    cp feeds.conf.default feeds.conf.default.local
+    vim feeds.conf.default.local
+
+Edit and save the new created file _feeds.conf.default.local_ and force the reinstall of the feeds
+
+    ./cooker -f --force
+
+Crete and add to the SDK config file the new packages you want to include (if any)
+
+    cp libremesh.sdk.config libremesh.sdk.config.local
+    echo "CONFIG_PACKAGE_myNewPackage=m" >> libremesh.sdk.config.local
+
+Add your new flavor (or modify the existing ones)
+
+    cp flavors.conf flavors.conf.local
+    vim flavors.conf.local
+
+Finally build and cook as usual but adding also your new packages
+
+    ./cooker -b ar71xx/generic
+    ./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_new_flavor
+
+##### For a casual cooking on a existing feed repository
+
+Download the standard feeds (if not previously downloaded)
+
+    ./cooker -f
+
+Modify the source code of the existing feed
+
+    cd feeds/libremesh
+    git checkout feature/somethingToTest
+
+Build the code and cook as usual
+
+    ./cooker -b ar71xx/generic
+    export PKG="someNewPackage?"
+    ./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default
 
 ## Forking lime-sdk for your community
 

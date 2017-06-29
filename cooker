@@ -165,7 +165,7 @@ build_sdk() {
         (cd $sdk && scripts/feeds install $p)
     done
 
-    cp $sdk_config $sdk/.config
+    cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
         [ -f "$ib/repositories.original.conf" ] || download_ib $target
@@ -193,6 +193,7 @@ build_sdk() {
 
 download_feeds() {
     local feeds_template="$feeds_default_file"
+    [ -f "${feeds_template}.local" ] && feeds_template=${feeds_template}.local
     local output="$feeds_dir"
 
     [ -f "$feeds_file" ] && [ -z "$force_install" ] && {
@@ -202,6 +203,7 @@ download_feeds() {
 
     [ -f $feeds_file ] && rm -f $feeds_file
     [ ! -d "$output" ] && mkdir -p "$output"
+    echo "-> Using feeds from file $feeds_template"
     echo "-> Downloading feeds into $output/"
 
     cat $feeds_template | grep ^src-git | while read feed; do
@@ -321,6 +323,7 @@ unpack_ib() {
            [ -d $output/ib ] && rm -rf $output/ib
            mv $output/lede-imagebuilder* $output/ib
            cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
+           sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
     }
 }
