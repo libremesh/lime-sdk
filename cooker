@@ -102,7 +102,7 @@ cook() {
     local ib_files=""
     local myfiles="$PWD/$files_dir"
     [ -n "$community_files" ] && myfiles="$community_files"
-    local fw_extra_name="libremesh"
+    local fw_extra_name="$flavor"
     [ -n "$community" ] && fw_extra_name="$community-$community_profile"
     find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
     [ "$profile" == "Default" ] && profile="" # if profile is Default better leave it blank. some targets do not have any profile
