@@ -10,7 +10,7 @@ J=${J:-$make_j}
 
 usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
-                [-b <target> [--no-update|no-link-ib|remote] [--profile=<profile>] [--flavor=<flavor>]]
+                [-b <target> [--no-update|no-link-ib|remote|clean] [--profile=<profile>] [--flavor=<flavor>]]
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
                 [-c <target> [--profile=<profile>] [--flavor=<flavor>] [--community=<name/profile>]] [--help]"
     echo ""
@@ -35,6 +35,7 @@ usage() {
     echo "    -b <target>                : build SDK for specific target and link it to the ImageBuilder"
     echo "       --no-link-ib            : do not download and link ImageBuilder when building the SDK"
     echo "       --no-update             : do not update feeds when building SDK"
+    echo "       --clean                 : clean sources before compiling"
     echo "    -c <target>                : cook the firmware for specific target. Can be used with next options"
     echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
     echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
@@ -139,6 +140,13 @@ cook_all_targets() {
     [ -n "$ERROR_PROFILES" ] && echo "-> Profiles with errors: $ERROR_PROFILES"
 }
 
+clean_sdk() {
+    local target="$1"
+    local sdk="$release/$target/sdk"
+    echo "--> Cleaning SDK before compiling"
+    make -C $sdk clean
+}
+
 build_sdk() {
     local target="$1"
     local sdk="$release/$target/sdk"
@@ -157,6 +165,8 @@ build_sdk() {
     }
     cp -f "$feeds_file" "$sdk/feeds.conf"
     [ -z "$no_update" ] && (cd $sdk && scripts/feeds update -a) || (cd $sdk && scripts/feeds update -i)
+
+    [ -n "$sdk_clean" ] && clean_sdk $target
 
     for r in $sdk_install_repos; do
         (cd $sdk && scripts/feeds install -p $r -a)
@@ -353,7 +363,7 @@ list_profiles() {
 
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
-update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,\
+update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,clean,\
 communities,community:,cook-all -n $0 -- "$@")
 eval set -- "$OPTS"
 
@@ -443,6 +453,10 @@ while true; do
             target=$2
             shift;shift
         ;;
+        --clean)
+           sdk_clean=1
+           shift
+        ;;
         -c)
             cook=1
             target="$2"
@@ -456,11 +470,11 @@ while true; do
             flavor="$2"
             shift;shift
         ;;
-      --remote)
+        --remote)
             use_remote_pkgs="1"
             shift
         ;;
-      --community)
+        --community)
             community="${2%/*}"
             community_profile="${2#*/}"
             shift;shift
