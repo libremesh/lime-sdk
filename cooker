@@ -149,7 +149,7 @@ clean_sdk() {
     local target="$1"
     local sdk="$release/$target/sdk"
     echo "--> Cleaning SDK before compiling"
-    make -C $sdk clean
+    make -j$J V=$V -C $sdk package/clean
 }
 
 build_sdk() {
