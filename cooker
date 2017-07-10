@@ -12,7 +12,7 @@ usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
                 [-b <target> [--no-update|no-link-ib|remote|clean|package=<pkg>]]
-                [-c <target> [--profile=<profile>|no-update|remote] [--flavor=<flavor>] [--community=<name/profile>]] 
+                [-c <target> [--profile=<profile>|no-update|remote|flavor=<flavor>|community=<path>|extra-pkg=<list>]] 
                 [--help]"
     echo ""
     echo "    --help                     : show full help with examples"
@@ -41,6 +41,7 @@ usage() {
     echo "    -c <target>                : cook the firmware for specific target. Can be used with next options"
     echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
     echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
+    echo "       --extra-pkg=<pkg_list>  : specify extra packages (separated by spaces) for including into the output firmware"
     echo "       --remote                : instead of building local SDK packages. Use only remote repositories for cooking"
     echo "       --community=<name/prof> : specify which network community and profile device to use (if any)"
     echo "       --no-update             : do not update package list when cooking (requires patch_ib_no_update.sh snippet)"
@@ -69,11 +70,13 @@ examples() {
     echo ""
     echo "    $0 -c ar71xx/generic --flavor=lime_default --community=quintanalibre.org.ar/comun --profile=tl-wdr3500-v1"
     echo ""
-    echo " - PKG can be used to add extra packages when cooking. Also J to parallelize and V to verbose"
+    echo " - If not profile defined, cook all profiles of target. Also --extra-pkg option can be used to add extra packages when cooking"
     echo ""
-    echo "    PKG=\"luci-app-3g iperf\" J=4 V=s $0 -c ar71xx/generic"
+    echo "    $0 -c ar71xx/generic --flavor=lime_zero --extra-pkg=\"luci-proto-3g iperf\""
     echo ""
-    echo " - To see/debug build errors use: J=1 V=s $0 -b ar71xx/generic"
+    echo " - To see/debug build errors use J (number of threads) and V (verbose) system vars"
+    echo ""
+    echo "    J=1 V=s $0 -b ar71xx/generic --profile=tl-wdr3500-v1"
 }
 
 list_targets() {
@@ -385,7 +388,7 @@ list_profiles() {
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
 update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,clean,\
-communities,community:,cook-all,package: -n $0 -- "$@")
+communities,community:,cook-all,package:,extra-pkg: -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -502,6 +505,10 @@ while true; do
         --community)
             community="${2%/*}"
             community_profile="${2#*/}"
+            shift;shift
+        ;;
+        --extra-pkg)
+            PKG="$PKG $1"
             shift;shift
         ;;
         -h)
