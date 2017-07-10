@@ -70,7 +70,7 @@ Cooker can locally build the LibreMesh packages or fetch the remote precompiled 
 ## Communities
 It is not required to create and/or use a community profile. But if you are constantly cooking LibreMesh for your network and you need a specific configuration, you might want to spend some time creating a community profile. This will make things easier and better coordinated for your community.
 
-A community is mainly a set of files you want to include in the output firmware. For instance, if you want to pre-configure the WiFi SSID, mode or channels, you might want to include a specific _/etc/config/lime-defaults_ file as shown in this article http://libremesh.org/docs/config.html.
+A community is mainly a set of files you want to include in the output firmware. For instance, if you want to pre-configure the WiFi SSID, mode or channels, you might want to include a specific _/etc/config/lime-defaults_ file as shown in this article http://libremesh.org/docs/en_config.html.
 
 Also _/etc/shadow_ for setting an initial root password or _/etc/uci-defaults/_ one-time executed scripts might be useful for your setup.
 
