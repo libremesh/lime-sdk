@@ -9,6 +9,7 @@ lantiq/xrx200
 lantiq/xway
 x86/generic
 x86/64
+x86/geode
 mvebu/generic
 ipq806x/generic
 brcm2708/bcm2708
