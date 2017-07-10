@@ -55,14 +55,14 @@ examples() {
     echo ""
     echo " - Cook the firmware without compiling the SDK but using only remote precompiled binaries"
     echo ""
-    echo "    $0 -c ar71xx/generic --remote --flavor=lime_basic --profile=tl-wdr3500-v1"
+    echo "    $0 -c ar71xx/generic --remote --flavor=lime_mini --profile=tl-wdr3500-v1"
     echo ""
     echo " - Build SDK and cook ar71xx target with all available profiles (step by step)"
     echo ""
     echo "    $0 -d ar71xx/generic                        # download SDK and IB "
     echo "    $0 -f                                       # download and prepare feeds"
     echo "    $0 -b ar71xx/generic                        # build the SDK and link it to IB"
-    echo "    $0 -c ar71xx/generic --flavor=lime_default  # cook the firmware"
+    echo "    $0 -c ar71xx/generic --flavor=lime_default  # cook all firmwares for target ar71xx/generic"
     echo ""
     echo " - If you want to use an existing community network profile, specify it when cooking (in addition to the device profile)"
     echo ""
@@ -72,6 +72,7 @@ examples() {
     echo ""
     echo "    PKG=\"luci-app-3g iperf\" J=4 V=s $0 -c ar71xx/generic"
     echo ""
+    echo " - To see/debug build errors use: J=1 V=s $0 -b ar71xx/generic"
 }
 
 list_targets() {
