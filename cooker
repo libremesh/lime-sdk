@@ -10,8 +10,8 @@ J=${J:-$make_j}
 
 usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
-                [-b <target> [--no-update|no-link-ib|remote|clean] [--profile=<profile>] [--flavor=<flavor>]]
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
+                [-b <target> [--no-update|no-link-ib|remote|clean|package=<pkg>]]
                 [-c <target> [--profile=<profile>|no-update|remote] [--flavor=<flavor>] [--community=<name/profile>]] 
                 [--help]"
     echo ""
@@ -37,6 +37,7 @@ usage() {
     echo "       --no-link-ib            : do not download and link ImageBuilder when building the SDK"
     echo "       --no-update             : do not update feeds when building SDK"
     echo "       --clean                 : clean sources before compiling"
+    echo "       --package=<pkg_name>    : build only a package (and its dependencies)"
     echo "    -c <target>                : cook the firmware for specific target. Can be used with next options"
     echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
     echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
@@ -176,6 +177,11 @@ build_sdk() {
         (cd $sdk && scripts/feeds install $p)
     done
 
+    [ -n "$package" ] && {
+        build_pkg $sdk $package
+        return
+    }
+
     cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
@@ -200,6 +206,20 @@ build_sdk() {
           echo "-> Using custom $tmp_dir/repositories.sdk.conf"
         }
     } || echo "-> Error compiling SDK"
+}
+
+build_pkg() {
+  local sdk=$1
+  local pkg=$2
+  local output_dir=$PWD/$bin_output/packages
+  [ ! -d $output_dir ] && mkdir -p $output_dir
+  echo "-> Building package $pkg on sdk $sdk"
+  make -j$J V=$V -C $sdk package/$pkg/{clean,compile,install} && {
+  echo "-> Build of $pkg successful"
+  local pkg_file=$(find $sdk/bin/packages -type f -name "${pkg}*.ipk")
+  cp -f $pkg_file $output_dir/
+  echo "-> You can find it on $output_dir/$pkg_file"
+  } || echo "-> Build error, see full output using V=s J=1 ./cooker <options>"
 }
 
 download_feeds() {
@@ -365,7 +385,7 @@ list_profiles() {
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
 update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,clean,\
-communities,community:,cook-all -n $0 -- "$@")
+communities,community:,cook-all,package: -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -457,6 +477,10 @@ while true; do
         --clean)
            sdk_clean=1
            shift
+        ;;
+        --package)
+          package=$2
+          shift;shift
         ;;
         -c)
             cook=1
