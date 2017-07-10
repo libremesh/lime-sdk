@@ -12,7 +12,8 @@ usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [-b <target> [--no-update|no-link-ib|remote|clean] [--profile=<profile>] [--flavor=<flavor>]]
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
-                [-c <target> [--profile=<profile>] [--flavor=<flavor>] [--community=<name/profile>]] [--help]"
+                [-c <target> [--profile=<profile>|no-update|remote] [--flavor=<flavor>] [--community=<name/profile>]] 
+                [--help]"
     echo ""
     echo "    --help                     : show full help with examples"
     echo "    --download-all             : download all SDK and ImageBuilders"
@@ -41,6 +42,7 @@ usage() {
     echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
     echo "       --remote                : instead of building local SDK packages. Use only remote repositories for cooking"
     echo "       --community=<name/prof> : specify which network community and profile device to use (if any)"
+    echo "       --no-update             : do not update package list when cooking (requires patch_ib_no_update.sh snippet)"
     echo ""
 }
 
@@ -122,9 +124,7 @@ cook() {
 cook_all_profiles() {
     local target=$1
     echo -n -e "\n-> Cooking ALL profiles for target $target"
-    local first=1
     for p in `get_profile_names`; do
-      [ $first -eq 1 ] && first=0 || no_update=1
       local log="$tmp_dir/$(echo $target.$p | sed s/"\/"/-/g).log"
       echo -n -e "\n--> Cooking $target $p"
       (cook $target $p &> $log) && {
