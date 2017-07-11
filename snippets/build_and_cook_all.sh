@@ -3,10 +3,10 @@ COMM=""
 export J=1
 
 ./cooker --download-all
-bash snippets/copy_keys.sh 
+bash snippets/copy_signing_keys.sh
 
 ./cooker --update-feeds
-./cooker --build-all --clean
+./cooker --build-all # --clean
 
 for F in $FLAVORS; do
 	./cooker --cook-all --flavor=$F
