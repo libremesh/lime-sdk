@@ -281,7 +281,7 @@ update_feeds() {
 }
 
 build_all_sdk() {
-    cat $targets_list | while read t; do build_sdk $t; done
+    for t in $(cat $targets_list); do build_sdk $t; done
 }
 
 download_all() {
@@ -403,8 +403,8 @@ while true; do
             break
         ;;
         --build-all)
-            build_all_sdk
-            break
+            build_all=1
+            shift
         ;;
         --cook-all)
             cook_all=1
@@ -508,7 +508,7 @@ while true; do
             shift;shift
         ;;
         --extra-pkg)
-            PKG="$PKG $1"
+            PKG="$2"
             shift;shift
         ;;
         -h)
@@ -567,6 +567,6 @@ profile=${profile:-Default}
     fi
 }
 
-[ "$cook_all" == "1" ] && {
-    cook_all_targets
-}
+[ "$build_all" == "1" ] && build_all_sdk
+[ "$cook_all" == "1" ] && cook_all_targets
+
