@@ -132,8 +132,8 @@ cook_all_profiles() {
     for p in `get_profile_names`; do
       local log="$tmp_dir/$(echo $target.$p | sed s/"\/"/-/g).log"
       echo -n -e "\n--> Cooking $target $p"
-      (cook $target $p &> $log) && {
-        echo -n ": SUCCESS!"; } || echo -n ": FAIL! (log at $log)"
+      (cook $target $p &> $log) && { echo -n ": SUCCESS!"; mv $log $log.ok; } || {
+          mv $log $log.fail; echo -n ": FAIL! (log at $log.fail)"; }
     done
     [ -n "$ERROR_PROFILES" ] && echo "-> Profiles with errors: $ERROR_PROFILES"
 }
