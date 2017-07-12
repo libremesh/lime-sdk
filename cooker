@@ -11,7 +11,7 @@ J=${J:-$make_j}
 usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
-                [-b <target> [--no-update|no-link-ib|remote|clean|package=<pkg>]]
+                [-b <target> [--no-update|no-link-ib|remote|clean|force-local|package=<pkg>]]
                 [-c <target> [--profile=<profile>|no-update|remote|flavor=<flavor>|community=<path>|extra-pkg=<list>]] 
                 [--help]"
     echo ""
@@ -38,6 +38,7 @@ usage() {
     echo "       --no-update             : do not update feeds when building SDK"
     echo "       --clean                 : clean sources before compiling"
     echo "       --package=<pkg_name>    : build only a package (and its dependencies)"
+    echo "       --force-local           : force installation of all local SDK compiled packages when cooking firmware"
     echo "    -c <target>                : cook the firmware for specific target. Can be used with next options"
     echo "       --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)"
     echo "       --flavor=<flavor>       : use <flavor> when cooking firmware (default $default_flavor)"
@@ -189,25 +190,26 @@ build_sdk() {
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
         [ -f "$ib/repositories.original.conf" ] || download_ib $target
-        [ -f "$ib/repositories.sdk.conf" ] || {
-          cat $ib/repositories.original.conf > $tmp_dir/repositories.sdk.conf
-          echo "-> Linking IB with SDK"
-          echo "" >> $tmp_dir/repositories.sdk.conf
-          echo "##SDK_repos" >> $tmp_dir/repositories.sdk.conf
-          for r in $PWD/$sdk/bin/packages/*/*; do
+        cat $ib/repositories.original.conf > $tmp_dir/repositories.sdk.conf
+        echo "-> Linking IB with SDK"
+        [ -n "$force_local" ] && echo "-> Force all local packages is on"
+        echo "" >> $tmp_dir/repositories.sdk.conf
+        echo "##SDK_repos" >> $tmp_dir/repositories.sdk.conf
+        for r in $PWD/$sdk/bin/packages/*/*; do
+          [ -z "$force_local" ] && {
             case $r in
             # we build the master branch of the routing feed, hence
             # don't include it in the filter
             *base | *luci | *packages | *telephony)
-              continue
+               continue
               ;;
             esac
-            echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.sdk.conf
-          done
-          echo "" >> $tmp_dir/repositories.sdk.conf
-          cp -f $tmp_dir/repositories.sdk.conf $ib/repositories.sdk.conf
-          echo "-> Using custom $tmp_dir/repositories.sdk.conf"
-        }
+          }
+          echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.sdk.conf
+        done
+        echo "" >> $tmp_dir/repositories.sdk.conf
+        cp -f $tmp_dir/repositories.sdk.conf $ib/repositories.sdk.conf
+        echo "-> Using custom $tmp_dir/repositories.sdk.conf"
     } || echo "-> Error compiling SDK"
 }
 
@@ -388,7 +390,7 @@ list_profiles() {
 [ -z "$1" ] && usage
 OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
 update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,clean,\
-communities,community:,cook-all,package:,extra-pkg: -n $0 -- "$@")
+communities,community:,cook-all,package:,extra-pkg:,force-local -n $0 -- "$@")
 eval set -- "$OPTS"
 
 while true; do
@@ -500,6 +502,10 @@ while true; do
         ;;
         --remote)
             use_remote_pkgs="1"
+            shift
+        ;;
+        --force-local)
+            force_local="1"
             shift
         ;;
         --community)
