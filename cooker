@@ -207,6 +207,12 @@ build_sdk() {
           }
           echo "src sdk_$(basename $r) file:$r" >> $tmp_dir/repositories.sdk.conf
         done
+        # Add target packages (kmods) if force-local enabled
+        [ -n "$force_local" ] && {
+            local target_pkg_dir="$PWD/$sdk/bin/targets/$target/packages"
+            [ -d "$target_pkg_dir" ] && \
+            echo "src sdk_target file:$target_pkg_dir" >> $tmp_dir/repositories.sdk.conf
+        }
         echo "" >> $tmp_dir/repositories.sdk.conf
         cp -f $tmp_dir/repositories.sdk.conf $ib/repositories.sdk.conf
         echo "-> Using custom $tmp_dir/repositories.sdk.conf"
