@@ -9,9 +9,6 @@ echo "Patch will be applied to $base_feed"
   exit 1
 }
 
-echo "Reverting ATH_USER_REGD defunction commit..."
-( cd $base_feed && git revert --no-edit a9728799bc41e68de4d50995bb4ad689784ef55e)
-
 patch_file="$PWD/$tmp_dir/regdb.patch"
 
 cat > $patch_file << EOF
