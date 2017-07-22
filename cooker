@@ -1,4 +1,7 @@
 #!/bin/bash
+
+RESULT=0
+
 [ -f options.conf.local ] && . options.conf.local || . options.conf
 [ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
 
@@ -118,13 +121,15 @@ cook() {
     [ -n "$profile" ] && profile="PROFILE=$profile"
     [ -n "$no_update" ] && force_no_update="NO_UPDATE=1"
     [ -f "files_remove" ] && files_remove="FILES_REMOVE=$(pwd)/files_remove"
-    make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove && {
-      echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
+    make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
+    ERROR=$?
+    if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
       ERROR_PROFILES="$ERROR_PROFILES $target/$profile/$flavor"
-      return 1
-      }
-    }
+    else
+      echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory"
+    fi
+    return $ERROR
 }
 
 cook_all_profiles() {
@@ -576,9 +581,11 @@ profile=${profile:-Default}
       cook_all_profiles $target
     else
       cook $target $profile
+      RESULT=$?
     fi
 }
 
 [ "$build_all" == "1" ] && build_all_sdk
 [ "$cook_all" == "1" ] && cook_all_targets
 
+exit $RESULT
