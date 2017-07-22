@@ -118,13 +118,12 @@ cook() {
     [ -n "$profile" ] && profile="PROFILE=$profile"
     [ -n "$no_update" ] && force_no_update="NO_UPDATE=1"
     [ -f "files_remove" ] && files_remove="FILES_REMOVE=$(pwd)/files_remove"
-    make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove && {
+    make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove &&
       echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory" || {
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
       ERROR_PROFILES="$ERROR_PROFILES $target/$profile/$flavor"
       return 1
       }
-    }
 }
 
 cook_all_profiles() {
