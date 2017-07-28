@@ -3,7 +3,7 @@
 RESULT=0
 
 [ -f options.conf.local ] && . options.conf.local || . options.conf
-[ -f flavors.conf.local ] && . flavors.conf.local || . flavors.conf
+[ -f ${flavors_file}.local ] && . ${flavors_file}.local || . ${flavors_file}
 
 [ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
 [ ! -d "$downloads_dir" ] && mkdir -p "$downloads_dir"
