@@ -241,7 +241,6 @@ build_pkg() {
 download_feeds() {
     local feeds_template="$feeds_default_file"
     [ -f "${feeds_template}.local" ] && feeds_template=${feeds_template}.local
-    local output="$feeds_dir"
 
     [ -f "$feeds_file" ] && [ -z "$force_install" ] && {
         echo "-> Feeds already downloaded, doing nothing. Use --force to reinstall"
@@ -249,26 +248,27 @@ download_feeds() {
     }
 
     [ -f $feeds_file ] && rm -f $feeds_file
-    [ ! -d "$output" ] && mkdir -p "$output"
+    [ ! -d $feeds_dir ] && mkdir -p "$feeds_dir"
     echo "-> Using feeds from file $feeds_template"
-    echo "-> Downloading feeds into $output/"
+    echo "-> Downloading feeds into $feeds_dir/"
 
-    cat $feeds_template | grep ^src-git | while read feed; do
+    while read feed; do
+        echo "$feed" | grep -q ^src-git || continue
         name="$(echo $feed | awk '{print $2}')"
         full_url="$(echo $feed | awk '{print $3}')"
-        [ -d $output/$name ] && rm -rf $output/$name
+        [ -d $feeds_dir/$name ] && rm -rf $feeds_dir/$name
         if echo "$full_url" | grep \;; then
             url="$(echo $full_url | awk -F\; '{print $1}')"
             branch="$(echo $full_url | awk -F\; '{print $2}')"
-            git clone $url -b $branch $output/$name
+            git clone $url -b $branch $feeds_dir/$name
         elif echo "$full_url" | grep \^; then
             url="$(echo $full_url | awk -F\^ '{print $1}')"
             commit="$(echo $full_url | awk -F\^ '{print $2}')"
-            git clone $url $output/$name
-            ( cd $output/$name && git checkout $commit )
+            git clone $url $feeds_dir/$name
+            ( cd $feeds_dir/$name && git checkout $commit )
         fi
-        echo "src-link $name $PWD/$output/$name" >> $feeds_file
-    done
+        echo "src-link $name $PWD/$feeds_dir/$name" | tee -a $feeds_file
+    done < $feeds_template
 }
 
 download_communities() {
