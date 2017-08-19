@@ -14,7 +14,7 @@ J=${J:-$make_j}
 usage() {
     echo "Usage: $0 [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
                 [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
-                [-b <target> [--no-update|no-link-ib|remote|clean|force-local|package=<pkg>]]
+                [-b <target> [-j<N>] [--no-update|no-link-ib|remote|clean|force-local|package=<pkg>]]
                 [-c <target> [--profile=<profile>|no-update|remote|flavor=<flavor>|community=<path>|extra-pkg=<list>]] 
                 [--help]"
     echo ""
@@ -37,6 +37,7 @@ usage() {
     echo "       --sdk-file=<file>       : specify SDK file to unpack"
     echo "       --ib-file=<file>        : specify ImageBuilder file to unpack"
     echo "    -b <target>                : build SDK for specific target and link it to the ImageBuilder"
+    echo "       -j<N>                   : number of threads to use when building (recommended N=#cores+1)"
     echo "       --no-link-ib            : do not download and link ImageBuilder when building the SDK"
     echo "       --no-update             : do not update feeds when building SDK"
     echo "       --clean                 : clean sources before compiling"
@@ -251,7 +252,7 @@ download_feeds() {
     [ ! -d $feeds_dir ] && mkdir -p "$feeds_dir"
     echo "-> Using feeds from file $feeds_template"
     echo "-> Downloading feeds into $feeds_dir/"
-
+    set -e
     while read feed; do
         echo "$feed" | grep -q ^src-git || continue
         name="$(echo $feed | awk '{print $2}')"
@@ -269,6 +270,7 @@ download_feeds() {
         fi
         echo "src-link $name $PWD/$feeds_dir/$name" | tee -a $feeds_file
     done < $feeds_template
+    set +e
 }
 
 download_communities() {
@@ -399,7 +401,7 @@ list_profiles() {
 }
 
 [ -z "$1" ] && usage
-OPTS=$(getopt -o hd:fb:c:d:i: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
+OPTS=$(getopt -o hd:fb:c:d:i:j: -l targets,build-all,download-all,profiles:,flavors,profile:,flavor:,\
 update-feeds,no-update,no-link-ib,only-sdk,only-ib,remote,ib,sdk,sdk-file:,ib-file:,help,force,clean,\
 communities,community:,cook-all,package:,extra-pkg:,force-local -n $0 -- "$@")
 eval set -- "$OPTS"
@@ -488,6 +490,10 @@ while true; do
         -b)
             build_sdk=1
             target=$2
+            shift;shift
+        ;;
+        -j)
+            J=$2
             shift;shift
         ;;
         --clean)
