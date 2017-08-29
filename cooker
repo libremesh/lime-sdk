@@ -233,8 +233,9 @@ build_pkg() {
   echo "-> Building package $pkg on sdk $sdk"
   make -j$J V=$V -C $sdk package/$pkg/{clean,compile,install} && {
   echo "-> Build of $pkg successful"
-  local pkg_file=$(find $sdk/bin/packages -type f -name "${pkg}*.ipk")
-  cp -f $pkg_file $output_dir/
+  local pkg_path=$(find $sdk/bin/packages -type f -name "${pkg}*.ipk")
+  local pkg_file=$(echo $pkg_path | awk -F/ '{print $NF}')
+  cp -f $pkg_path $output_dir/
   echo "-> You can find it on $output_dir/$pkg_file"
   } || echo "-> Build error, see full output using V=s J=1 ./cooker <options>"
 }
