@@ -113,9 +113,28 @@ cook() {
 
     echo "-> Cooking $target/$profile"
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
-    local ib_files=""
-    local myfiles="$PWD/$files_dir"
-    [ -n "$community_files" ] && myfiles="$community_files"
+
+    # handle community packages and files, and local files
+    local ib_files="${PWD}/$tmp_dir/files"
+    local myfiles="${PWD}/$files_dir"
+    rm -rf ${ib_files}
+    mkdir -p ${ib_files}
+    [ -n "$community_files" ] && {
+      [ -f "${community_files}/PACKAGES" ] && {
+        echo -n "--> Adding community packages: "
+        for p in $(cat "${community_files}/PACKAGES"); do
+          PKG="$PKG $p"
+          echo -n "$p "
+        done
+        echo ""
+      }
+      echo "--> Copying community files"
+      cp -rf ${community_files}/* $ib_files/
+      [ -f ${ib_files}/PACKAGES ] && rm -f ${ib_files}/PACKAGES
+    }
+    cp -rf ${myfiles}/* ${ib_files}/
+
+    # make binary using imagebuilder
     local fw_extra_name="$flavor"
     [ -n "$community" ] && fw_extra_name="$community-$community_profile"
     find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
@@ -123,6 +142,7 @@ cook() {
     [ -n "$profile" ] && profile="PROFILE=$profile"
     [ -n "$no_update" ] && force_no_update="NO_UPDATE=1"
     [ -f "files_remove" ] && files_remove="FILES_REMOVE=$(pwd)/files_remove"
+    echo "-> Cooking firmware image"
     make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
     ERROR=$?
     if (($ERROR != 0)); then
@@ -283,7 +303,7 @@ download_communities() {
             exit 1
         }
     } || {
-        cd $communities_dir && git pull || {
+        (cd $communities_dir && git pull) || {
             echo "-> Cannot update communities repository"
             exit 1
         }
@@ -587,14 +607,14 @@ profile=${profile:-Default}
 [ "$cook" == "1" ] && {
     [ -n "$community" ] && [ -z "$community_profile" ] && {
         echo "-> If community is defined you must also specify its profile: --community=name/profile"
-        exit 0
+        exit 1
     } || [ -n "$community" ] && {
         download_communities
         community_files="$PWD/$communities_dir/$community/$community_profile"
         [ ! -d "$community_files" ] && {
             echo "-> The community and profile specified does not exist ($community_files)"
-            exit 0
-        } || echo "-> Using Community files from $community_files"
+            exit 1
+        } || echo "-> Using community files from $community_files"
     }
     if [ "$profile" == "Default" ]; then
       cook_all_profiles $target
