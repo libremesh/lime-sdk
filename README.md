@@ -82,6 +82,8 @@ Both community and device profile names can be any of your choice (must exist!) 
 
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --community=CommunityName/ProfileName`
 
+A community profile might include a special file named PACKAGES on the root of the profile directory (_CommunityName/ProfileName/PACKAGES_) to specify a list of extra packages which must be added to the firmware image.
+
 ## Using development branch
 
 If you want to get the last LEDE source because it includes some new feature or it supports some new hardware, you can use the lime-sdk branch named _develop_. However as LEDE source is changing daily, we cannot assure the correct working of the firmware.
@@ -158,8 +160,8 @@ Time to time, if you want to update the code with the official one you might add
 ## Advanced help
 
     Usage: ./cooker [-f [--force]] [-d <target> [--sdk|ib|force]] [-i <target> [--sdk-file=<file>|ib-file=<file>]] 
-                    [--download-all|build-all|update-feeds] [--targets|flavors|communities|profiles=<target>] 
-                    [-b <target> [--no-update|no-link-ib|remote|clean|package=<pkg>]]
+                    [--download-all|build-all|update-feeds] [--targets|flavors|communities|update-communities|profiles=<target>] 
+                    [-b <target> [-j<N>] [--no-update|no-link-ib|remote|clean|force-local|package=<pkg>]]
                     [-c <target> [--profile=<profile>|no-update|remote|flavor=<flavor>|community=<path>|extra-pkg=<list>]] 
                     [--help]
     
@@ -171,6 +173,7 @@ Time to time, if you want to update the code with the official one you might add
         --profiles=<target>        : list available hardware profiles for a specific target
         --flavors                  : list available LibreMesh flavors for cooking
         --communities              : list available community profiles
+        --update-communities       : update or download community profiles
         --update-feeds             : update previously downloaded feeds (only works for Git feeds)
         -f                         : download feeds based on feeds.conf.default file. Feeds will be shared among all targets
            --force                 : force reinstall of feeds (remove old if exist)
@@ -182,10 +185,12 @@ Time to time, if you want to update the code with the official one you might add
            --sdk-file=<file>       : specify SDK file to unpack
            --ib-file=<file>        : specify ImageBuilder file to unpack
         -b <target>                : build SDK for specific target and link it to the ImageBuilder
+           -j<N>                   : number of threads to use when building (recommended N=#cores+1)
            --no-link-ib            : do not download and link ImageBuilder when building the SDK
            --no-update             : do not update feeds when building SDK
            --clean                 : clean sources before compiling
            --package=<pkg_name>    : build only a package (and its dependencies)
+           --force-local           : force installation of all local SDK compiled packages when cooking firmware
         -c <target>                : cook the firmware for specific target. Can be used with next options
            --profile=<profile>     : use <profile> when cooking firmware (default is all available target profiles)
            --flavor=<flavor>       : use <flavor> when cooking firmware (default lime_default)
