@@ -301,12 +301,16 @@ download_communities() {
             echo "-> Cannot fetch communities repository"
             exit 1
         }
-    } || {
+    }
+}
+
+update_communities() {
+    [ ! -d "$communities_dir" ] && download_communities || {
         (cd $communities_dir && git pull) || {
             echo "-> Cannot update communities repository"
             exit 1
         }
-    }
+      }
 }
 
 list_communities() {
@@ -609,7 +613,7 @@ profile=${profile:-Default}
     download_feeds
 }
 
-[ "$update_communities" == "1" ] && download_communities
+[ "$update_communities" == "1" ] && update_communities
 
 [ "$build_sdk" == "1" ] && build_sdk $target
 
