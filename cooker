@@ -121,18 +121,14 @@ cook() {
     mkdir -p ${ib_files}
     [ -n "$community_files" ] && {
       [ -f "${community_files}/PACKAGES" ] && {
-        echo -n "--> Adding community packages: "
-        for p in $(cat "${community_files}/PACKAGES"); do
-          PKG="$PKG $p"
-          echo -n "$p "
-        done
-        echo ""
+        echo "--> Adding community packages: "
+        join_packages $(cat "${community_files}/PACKAGES")
       }
       echo "--> Copying community files"
-      cp -rf ${community_files}/* $ib_files/
+      cp -rf ${community_files}/* $ib_files/ 2>/dev/null
       [ -f ${ib_files}/PACKAGES ] && rm -f ${ib_files}/PACKAGES
     }
-    cp -rf ${myfiles}/* ${ib_files}/
+    cp -rf ${myfiles}/* ${ib_files}/ 2>/dev/null
 
     # make binary using imagebuilder
     local fw_extra_name="$flavor"
@@ -143,7 +139,9 @@ cook() {
     [ -n "$no_update" ] && force_no_update="NO_UPDATE=1"
     [ -f "files_remove" ] && files_remove="FILES_REMOVE=$(pwd)/files_remove"
     echo "-> Cooking firmware image"
-    make -C $ib image $profile PACKAGES="${!flavor} $PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
+    join_packages ${!flavor}
+    echo "--> Selected extra packages:$PKG"
+    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
     ERROR=$?
     if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
@@ -302,12 +300,16 @@ download_communities() {
             echo "-> Cannot fetch communities repository"
             exit 1
         }
-    } || {
+    }
+}
+
+update_communities() {
+    [ ! -d "$communities_dir" ] && download_communities || {
         (cd $communities_dir && git pull) || {
             echo "-> Cannot update communities repository"
             exit 1
         }
-    }
+      }
 }
 
 list_communities() {
@@ -425,6 +427,14 @@ list_profiles() {
     local target="$1"
     [ ! -d $release/$target/ib ] && download_ib $target
     make -C $release/$target/ib info
+}
+
+# join a list of new packages into PKG var, older has preference
+join_packages() {
+  local new="$@"
+  for p in $new; do
+    echo "$PKG" | egrep -q "(^| |-)${p#*-}($| )" || PKG="$PKG $p"
+  done
 }
 
 [ -z "$1" ] && usage
@@ -562,7 +572,9 @@ while true; do
             shift;shift
         ;;
         --extra-pkg)
+            system_pkg="$PKG"
             PKG="$2"
+            join_packages $system_pkg
             shift;shift
         ;;
         -h)
@@ -600,7 +612,7 @@ profile=${profile:-Default}
     download_feeds
 }
 
-[ "$update_communities" == "1" ] && download_communities
+[ "$update_communities" == "1" ] && update_communities
 
 [ "$build_sdk" == "1" ] && build_sdk $target
 
