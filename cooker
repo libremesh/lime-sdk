@@ -433,7 +433,7 @@ list_profiles() {
 join_packages() {
   local new="$@"
   for p in $new; do
-    echo "$PKG" | egrep -q "(^| |-)${p#*-}($| )" || PKG="$PKG $p"
+    echo "$PKG" | egrep -q "^(|-)${p#-*}($|)" || PKG="$PKG $p"
   done
 }
 
