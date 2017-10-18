@@ -7,7 +7,16 @@ Basic usage example for cooking a firmware for TpLink 4300:
 
 ## Preparing the local environment
 
+### Building in running system
+
 Before using lime-sdk, make sure your Linux system has the required dependencies installed. You might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
+
+### Building in docker container
+
+Install [Docker](https://www.docker.com/get-docker) and run the following command:
+
+	docker build -t cooker .
+	docker run -it cooker -v "$(pwd":/app --<parameters>
 
 ## Targets, profiles and flavors
 LibreMesh can be used on many different devices (target and profile) and can be packed in many different ways (flavors), depending on your needs. To this end, it is important to choose the right options for building your firmware.
