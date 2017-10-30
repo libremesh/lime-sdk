@@ -480,7 +480,7 @@ while true; do
         ;;
         --update-feeds)
             update_feeds
-            break
+            shift
         ;;
         --no-update)
             no_update=1
