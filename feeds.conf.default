@@ -1,9 +1,9 @@
-src-git base https://github.com/lede-project/source.git;v17.01.2
+src-git base https://git.lede-project.org/source.git;lede-17.01
 src-git packages https://git.lede-project.org/feed/packages.git;lede-17.01
-src-git luci https://git.lede-project.org/project/luci.git;lede-17.01
-src-git routing https://git.lede-project.org/feed/routing.git;master
-src-git telephony https://git.lede-project.org/feed/telephony.git;lede-17.01
+src-git luci https://git.lede-project.org/project/luci.git
+src-git routing https://git.lede-project.org/feed/routing.git
+src-git telephony https://git.lede-project.org/feed/telephony.git
 
-src-git libremesh https://github.com/libremesh/lime-packages.git;17.06
+src-git libremesh https://github.com/libremesh/lime-packages.git;develop
 src-git libremap https://github.com/libremap/libremap-agent-openwrt.git;master
 src-git limeui https://github.com/libremesh/lime-ui-ng.git;master
