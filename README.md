@@ -5,9 +5,9 @@ Basic usage example for cooking a firmware for TpLink 4300:
 
 `./cooker -c ar71xx/generic --flavor=lime_default --profile=tl-wdr4300-v1`
 
-## Using cooker online
+## Using cooker online with Chef
 
-cooker can be used also via [online imagebuilder](https://imagebuilder.libremesh.org/imagebuilder) web interface. Its source code can be found [here](https://github.com/aparcar/jefe/). 
+cooker can be used also via [Chef](https://chef.libremesh.org/) web interface. Its source code can be found [here](https://github.com/libremesh/chef/). 
 
 ## Preparing the local environment
 
