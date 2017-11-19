@@ -13,7 +13,15 @@ cooker can be used also via [Chef](https://chef.libremesh.org/) web interface. I
 
 ### Building in running system
 
-Before using lime-sdk, make sure your Linux system has the required dependencies installed. You might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
+Before using lime-sdk, make sure your Linux system has the required dependencies installed. 
+
+Install build dependencies, for example on a Debian/Ubuntu based Linux distribution install the following packages:
+
+```
+sudo apt-get install subversion zlib1g-dev gawk flex unzip bzip2 gettext build-essential libncurses5-dev libncursesw5-dev libssl-dev binutils cpp psmisc docbook-to-man wget git
+```
+
+For other systems, you might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
 
 ### Building in docker container
 
