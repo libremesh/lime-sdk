@@ -81,12 +81,22 @@ The standard steps to generate a firmware would be: firstly build and secondly c
 
 However, cooker is smart enough to detect the missing steps and transparently execute them. If we choose to cook before building, it will automatically build before cooking. Therefore, for debugging purposes it is better to execute the steps separately.
 
+
 On the other hand, if you do not want to build locally (since it requires some special software installed on your Linux machine), you can just cook using the online precompiled binaries.
 
 ##### Building locally or fetch remote?
 Cooker can locally build the LibreMesh packages or fetch the remote precompiled ones. For most users there is no real need for building, since using the remote ones might be a better (and fast) option. To remotelly fetch the packages the special option _--remote_ must be used when cooking, like this:
 
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --remote`
+
+#### Using custom SDK and/or IB files
+Custom local SDK and IB files can be used (instead of fetching official LEDE sources). Must be specified before building or cooking ("-b" or "-c").
+
+`./cooker -f`
+`./cooker -i ar71xx/generic --ib-file=myOwnImageBuilder.tar.xz --sdk-file=myOwnSDK.tar.xz`
+`./cooker -b ar71xx/generic`
+`./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default`
+
 
 ## Communities
 It is not required to create and/or use a community profile. But if you are constantly cooking LibreMesh for your network and you need a specific configuration, you might want to spend some time creating a community profile. This will make things easier and better coordinated for your community.
