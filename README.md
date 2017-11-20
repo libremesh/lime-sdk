@@ -5,9 +5,30 @@ Basic usage example for cooking a firmware for TpLink 4300:
 
 `./cooker -c ar71xx/generic --flavor=lime_default --profile=tl-wdr4300-v1`
 
+## Using cooker online with Chef
+
+cooker can be used also via [Chef](https://chef.libremesh.org/) web interface. Its source code can be found [here](https://github.com/libremesh/chef/). 
+
 ## Preparing the local environment
 
-Before using lime-sdk, make sure your Linux system has the required dependencies installed. You might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
+### Building in running system
+
+Before using lime-sdk, make sure your Linux system has the required dependencies installed. 
+
+Install build dependencies, for example on a Debian/Ubuntu based Linux distribution install the following packages:
+
+```
+sudo apt-get install subversion zlib1g-dev gawk flex unzip bzip2 gettext build-essential libncurses5-dev libncursesw5-dev libssl-dev binutils cpp psmisc docbook-to-man wget git
+```
+
+For other systems, you might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
+
+### Building in docker container
+
+Install [Docker](https://www.docker.com/get-docker) and run the following command:
+
+	docker build -t cooker .
+	docker run -it cooker -v "$(pwd":/app --<parameters>
 
 ## Targets, profiles and flavors
 LibreMesh can be used on many different devices (target and profile) and can be packed in many different ways (flavors), depending on your needs. To this end, it is important to choose the right options for building your firmware.
@@ -228,3 +249,64 @@ Time to time, if you want to update the code with the official one you might add
     
         J=1 V=s ./cooker -b ar71xx/generic --profile=tl-wdr3500-v1
 
+## Testing on QEMU
+
+While developing new features, or just testing out fixes, being able to see them in action without having to reflash a device can be useful. To
+achieve this you can spin a [QEMU](https://en.wikipedia.org/wiki/QEMU) virtual machine and boot the image with your edits.
+Theese instruction are based on [Lede documentation](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to libremesh building process.
+
+First of all you need to create your cooked version of LiMe firmware, see [up here](#preparing-the-local-environment).
+
+Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
+accordingly to the architecture and profile choosen. The intersting files are
+
+ * lede-17.01.2-lime-XXXX-zImage
+ * lede-17.01.2-lime-XXXX-root.ext4.gz
+
+Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` unsing `gunzip lede-17.01.2-lime-XXXX-root.ext4.gz`
+
+Now you need to install qemu in order to boot the image, usually it's available inside the repositories of the distribution. Here some quick links
+documenting how to install it on [Debian](https://wiki.debian.org/QEMU) or [ArchLinux](https://wiki.archlinux.org/index.php/QEMU).
+
+Note that if you
+want to use an image built for arm you should have `qemu-system-arch` command available, often provided by `qemu-arch-extra` package.
+
+Now it's time to spin the virtual machine.
+
+
+### Using plain QEMU
+Plain qemu can be launched straight from the commandline, if you don't need to access webui and just want to have a shell you can issue
+
+`$ qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-zImage -drive file=lede-17.01.2-lime-XXXX-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
+
+And you will find yourself inside the VM booted.
+
+You can also have access to the web interface configuring a tap device on the host as follows.
+
+TODO
+
+### Using Virt-Manager
+
+[VirtManager](https://github.com/virt-manager/virt-manager) is an higher level way to deal with virtualization using libvirt. Libvirt supports several
+virtualization technologies, not only Qemu. It's a quick'n'easy way to setup a test environment.
+
+Many distributions provide packages for Virt-Manager, you have to install it together with qemu
+
+* **ArchLinux**: `$ sudo pacman -S virt-manager`
+* **Debian**: `$ sudo apt-get install virt-manager`
+
+The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-sping the VM to see your changes
+
+What you need to do is to start the libvirtd and virtlogd daemons (if not already started), open Virt-Manager and ensure you are connected to the
+libvirt socket.
+
+Now you have to create a new virtual machine, choose the correct architecture based on you build, assign resources and choose `NAT` as netword type. In this way you will be able to connect to the web interface and the device will have internet access.
+
+Taking arm as an example you'll have to choose the `lede-17.01.2-lime-XXXX-root.ext4` file as disk and the `lede-17.01.2-lime-XXXX-zImage` file as kernel path. Insert `root=/dev/vda rootwait` as kernel args. Before launching the install choose to customize the setup. Go to the disk tab and change from scsi to virtio mode. You should now be able to start the VM.
+
+Libvirt automatically create a bridge interface for you to which the VMs are connected to. Assign your bridge device a network address inside LiMe subnet
+and you should be good to go, something like
+
+`# ip address add 10.13.246.1/16 dev virbr0`
+
+Should be good, you can be sure about the address opening the VM and issuing an `ip address show dev br-lan` once the interfaces are correctly set-up.
