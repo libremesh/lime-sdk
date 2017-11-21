@@ -28,7 +28,7 @@ For other systems, you might follow these instructions (look for _Examples of Pa
 Install [Docker](https://www.docker.com/get-docker) and run the following command:
 
 	docker build -t cooker .
-	docker run -it cooker -v "$(pwd":/app --<parameters>
+	docker run -it cooker -v "$(pwd)":/app --<parameters>
 
 ## Targets, profiles and flavors
 LibreMesh can be used on many different devices (target and profile) and can be packed in many different ways (flavors), depending on your needs. To this end, it is important to choose the right options for building your firmware.
