@@ -28,8 +28,8 @@ For other systems, you might follow these instructions (look for _Examples of Pa
 Install [Docker](https://www.docker.com/get-docker) and run the following command:
 
 	cd lime-sdk
-	docker build -t cooker .
-	docker run -v "$(pwd)":/app cooker --<parameters>
+	sudo docker build -t cooker .
+	sudo docker run -v "$(pwd)":/app cooker --<parameters>
 
 ## Targets, profiles and flavors
 LibreMesh can be used on many different devices (target and profile) and can be packed in many different ways (flavors), depending on your needs. To this end, it is important to choose the right options for building your firmware.
