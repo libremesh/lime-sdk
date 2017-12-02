@@ -266,33 +266,36 @@ Time to time, if you want to update the code with the official one you might add
 
 While developing new features, or just testing out fixes, being able to see them in action without having to reflash a device can be useful. To
 achieve this you can spin a [QEMU](https://en.wikipedia.org/wiki/QEMU) virtual machine and boot the image with your edits.
-Theese instruction are based on [Lede documentation](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to libremesh building process.
+These instruction are based on [LEDE documentation](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to LibreMesh building process.
 
-First of all you need to create your cooked version of LiMe firmware, see [up here](#preparing-the-local-environment).
+First of all you need to create your cooked version of LibreMesh firmware for the `armvirt` target, see [up here](#preparing-the-local-environment).
+
+    cd lime-sdk
+    ./cooker -c armvirt/generic --flavor=lime_default --update-feeds
 
 Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
-accordingly to the architecture and profile choosen. The intersting files are
+accordingly to the architecture and profile chosen. The interesting files are:
 
  * lede-17.01.2-lime-XXXX-zImage
  * lede-17.01.2-lime-XXXX-root.ext4.gz
 
-Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` unsing `gunzip lede-17.01.2-lime-XXXX-root.ext4.gz`
+Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.2-lime-XXXX-root.ext4.gz`
 
 Now you need to install qemu in order to boot the image, usually it's available inside the repositories of the distribution. Here some quick links
 documenting how to install it on [Debian](https://wiki.debian.org/QEMU) or [ArchLinux](https://wiki.archlinux.org/index.php/QEMU).
 
 Note that if you
-want to use an image built for arm you should have `qemu-system-arch` command available, often provided by `qemu-arch-extra` package.
+want to use an image built for arm you should have `qemu-system-arm` command available, often provided by `qemu-system-arm` or `qemu-arch-extra` package.
 
 Now it's time to spin the virtual machine.
 
 
 ### Using plain QEMU
-Plain qemu can be launched straight from the commandline, if you don't need to access webui and just want to have a shell you can issue
+Plain qemu can be launched straight from the command line, if you don't need to access LibreMesh web interface and just want to have a shell you can issue
 
-`$ qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-zImage -drive file=lede-17.01.2-lime-XXXX-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
+`qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-armvirt-zImage -drive file=lede-17.01.2-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
 
-And you will find yourself inside the VM booted.
+Press enter and you will find yourself inside the VM booted.
 
 You can also have access to the web interface configuring a tap device on the host as follows.
 
@@ -303,23 +306,43 @@ TODO
 [VirtManager](https://github.com/virt-manager/virt-manager) is an higher level way to deal with virtualization using libvirt. Libvirt supports several
 virtualization technologies, not only Qemu. It's a quick'n'easy way to setup a test environment.
 
-Many distributions provide packages for Virt-Manager, you have to install it together with qemu
+Many distributions provide packages for Virt-Manager, you have to install it together with qemu:
 
-* **ArchLinux**: `$ sudo pacman -S virt-manager`
-* **Debian**: `$ sudo apt-get install virt-manager`
+* **ArchLinux**: `sudo pacman -S virt-manager`
+* **Debian** and **Ubuntu**: `sudo apt-get install virt-manager`
 
-The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-sping the VM to see your changes
+If you plan to use networking functions, like accessing the web interface, you'll need to install also `iptables` and `ebtables` packages.
 
-What you need to do is to start the libvirtd and virtlogd daemons (if not already started), open Virt-Manager and ensure you are connected to the
+The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-spin the VM to see your changes.
+
+What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with `sudo systemctl start libvirtd.service virtlogd.service`), open Virt-Manager and ensure you are connected to the
 libvirt socket.
 
-Now you have to create a new virtual machine, choose the correct architecture based on you build, assign resources and choose `NAT` as netword type. In this way you will be able to connect to the web interface and the device will have internet access.
+Now you have to create a new virtual machine: click on *File/New Virtual Machine*, select *Import existing disk image* and choose the *arm* architecture under *Architecture options* and *virt* machine type.
 
-Taking arm as an example you'll have to choose the `lede-17.01.2-lime-XXXX-root.ext4` file as disk and the `lede-17.01.2-lime-XXXX-zImage` file as kernel path. Insert `root=/dev/vda rootwait` as kernel args. Before launching the install choose to customize the setup. Go to the disk tab and change from scsi to virtio mode. You should now be able to start the VM.
+Taking arm as an example you'll have to choose (clicking *Browse* and *Browse Local* buttons) the `lede-17.01.2-lime-XXXX-armvirt-root.ext4` file as storage disk and the `lede-17.01.2-lime-XXXX-armvirt-zImage` file as Kernel path. Insert `root=/dev/vda rootwait` as Kernel args. You can leave *OS type* as *Generic*.
 
-Libvirt automatically create a bridge interface for you to which the VMs are connected to. Assign your bridge device a network address inside LiMe subnet
-and you should be good to go, something like
+Assign resources (64 MB of RAM memory should be enough) and, under *Network selection*, choose `NAT` as network type. In this way you will be able to connect to the web interface and the device will have internet access.
 
-`# ip address add 10.13.246.1/16 dev virbr0`
+If you started the VM at this point, it will hang, you can shut it down from the menu *Virtual Machine/Shut Down/Force off*.
+
+What is missing is to change the disk bus mode: open the VM windows without starting the VM, click on *View/Details* open the *SATA disk 1* tab and change *Disk bus* from *SATA* to *VirtIO*. You should now be able to start the VM.
+
+Libvirt automatically create a bridge interface for you to which the VMs are connected to. Assign your bridge device a network address inside LibreMesh subnet
+and you should be good to go, something like:
+
+`sudo ip address add 10.13.246.1/16 dev virbr0`
+
+Or get one via DHCP with: `sudo dhcpcd --metric 9999 virbr0` or `sudo dhclient -e IF_METRIC=9999 -i virbr0`
 
 Should be good, you can be sure about the address opening the VM and issuing an `ip address show dev br-lan` once the interfaces are correctly set-up.
+
+You can access the router web interface in a browser with the router IP or anygw IP which could be something like `10.13.0.1`
+
+If the router has just one ethernet interface, like in our VM, LibreMesh by default doesn't use that interface as WAN. If you need the router to have access to the internet, using the VM console interface edit `/etc/config/lime` adding a specific interface configuration like:
+
+    config net manualwan
+        option linux_name 'eth0'
+        list protocols 'wan'
+
+applying the new settings with the command `lime-config; service network reload`. A drawback is that in this way the web interface can not be accessed anymore because of LibreMesh firewall blocking connections incoming from the WAN interface.
