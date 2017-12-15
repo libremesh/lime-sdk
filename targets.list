@@ -3,8 +3,7 @@ ramips/rt305x
 ramips/rt3883
 ramips/mt7620
 ramips/mt7621
-ramips/mt7628
-ramips/mt7688
+ramips/mt76x8
 lantiq/xrx200
 lantiq/xway
 x86/generic
