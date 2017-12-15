@@ -141,7 +141,7 @@ cook() {
     echo "-> Cooking firmware image"
     join_packages ${!flavor}
     echo "--> Selected extra packages:$PKG"
-    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" FILES="$ib_files" $force_no_update $files_remove
+    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
     ERROR=$?
     if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
