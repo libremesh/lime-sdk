@@ -343,7 +343,7 @@ download_sdk() {
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
     
-    local sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    local sdk_file="$(wget -q -O- $url | grep ${brand_name}-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$sdk_file"
     wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file" || {
         echo "-> Error, cannot download SDK $url/$sdk_file"
@@ -363,7 +363,7 @@ unpack_sdk() {
         echo "-> Unpacking SDK to $output"
         tar xf $file -C $output/ && {
             [ -d $output/sdk ] && rm -rf $output/sdk
-            mv $output/lede-sdk* $output/sdk
+            mv $output/${brand_name}-sdk* $output/sdk
             rm -rf $output/sdk/dl
             local dl=$downloads_dir
             echo $dl | grep -q / || dl="$PWD/$dl"
@@ -383,7 +383,7 @@ download_ib() {
     local url="$base_url/$target"
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
-    local ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    local ib_file="$(wget -q -O- $url | grep ${brand_name}-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$ib_file"
     wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file" || {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
@@ -402,7 +402,7 @@ unpack_ib() {
         echo "-> Unpacking ImageBuilder to $output"
         tar xf $file -C $output/ && {
            [ -d $output/ib ] && rm -rf $output/ib
-           mv $output/lede-imagebuilder* $output/ib
+           mv $output/${brand_name}-imagebuilder* $output/ib
            cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
            sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
