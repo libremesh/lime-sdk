@@ -114,34 +114,37 @@ cook() {
     echo "-> Cooking $target/$profile"
     [ ! -d "$output_dir" ] && mkdir -p $output_dir
 
-    # handle community packages and files, and local files
-    local ib_files="${PWD}/$tmp_dir/files"
-    local myfiles="${PWD}/$files_dir"
-    rm -rf ${ib_files}
-    mkdir -p ${ib_files}
+    # handle community packages files, and local files
+    local ib_files_dir="${PWD}/$tmp_dir/files"
+    local local_files="${PWD}/$files_dir"
+    rm -rf ${ib_files_dir}; mkdir -p ${ib_files_dir}
     [ -n "$community_files" ] && {
       [ -f "${community_files}/PACKAGES" ] && {
         echo "--> Adding community packages: "
         join_packages $(cat "${community_files}/PACKAGES")
       }
       echo "--> Copying community files"
-      cp -rf ${community_files}/* $ib_files/ 2>/dev/null
-      [ -f ${ib_files}/PACKAGES ] && rm -f ${ib_files}/PACKAGES
+      cp -rf ${community_files}/* $ib_files_dir/ 2>/dev/null
+      [ -f ${ib_files_dir}/PACKAGES ] && rm -f ${ib_files_dir}/PACKAGES
     }
-    cp -rf ${myfiles}/* ${ib_files}/ 2>/dev/null
+    cp -rf ${local_files}/* ${ib_files_dir}/ 2>/dev/null
 
     # make binary using imagebuilder
     local fw_extra_name="$flavor"
     [ -n "$community" ] && fw_extra_name="$community-$community_profile"
-    find $myfiles/* 2>/dev/null && ib_files="FILES=$myfiles" # if files directory is empty, IB crashes
-    [ "$profile" == "Default" ] && profile="" # if profile is Default better leave it blank. some targets do not have any profile
+    # if profile is Default better leave it blank. some targets do not have any profile
+    [ "$profile" == "Default" ] && profile=""
     [ -n "$profile" ] && profile="PROFILE=$profile"
     [ -n "$no_update" ] && force_no_update="NO_UPDATE=1"
     [ -f "files_remove" ] && files_remove="FILES_REMOVE=$(pwd)/files_remove"
     echo "-> Cooking firmware image"
     join_packages ${!flavor}
     echo "--> Selected extra packages:$PKG"
-    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" FILES="$ib_files" $force_no_update $files_remove
+    make -C $ib image $profile PACKAGES="$PKG" \
+      EXTRA_IMAGE_NAME="$fw_extra_name" \
+      BIN_DIR="$output_dir" \
+      `ls $ib_files_dir/* 1>/dev/null 2>&1 && echo "FILES=$ib_files_dir"` \
+      $force_no_update $files_remove
     ERROR=$?
     if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
@@ -343,7 +346,7 @@ download_sdk() {
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
     
-    local sdk_file="$(wget -q -O- $url | grep lede-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    local sdk_file="$(wget -q -O- $url | grep ${brand_name}-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$sdk_file"
     wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file" || {
         echo "-> Error, cannot download SDK $url/$sdk_file"
@@ -363,7 +366,7 @@ unpack_sdk() {
         echo "-> Unpacking SDK to $output"
         tar xf $file -C $output/ && {
             [ -d $output/sdk ] && rm -rf $output/sdk
-            mv $output/lede-sdk* $output/sdk
+            mv $output/${brand_name}-sdk* $output/sdk
             rm -rf $output/sdk/dl
             local dl=$downloads_dir
             echo $dl | grep -q / || dl="$PWD/$dl"
@@ -383,7 +386,7 @@ download_ib() {
     local url="$base_url/$target"
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
-    local ib_file="$(wget -q -O- $url | grep lede-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    local ib_file="$(wget -q -O- $url | grep ${brand_name}-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
     echo "-> Downloading $url/$ib_file"
     wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file" || {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
@@ -402,7 +405,7 @@ unpack_ib() {
         echo "-> Unpacking ImageBuilder to $output"
         tar xf $file -C $output/ && {
            [ -d $output/ib ] && rm -rf $output/ib
-           mv $output/lede-imagebuilder* $output/ib
+           mv $output/${brand_name}-imagebuilder* $output/ib
            cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
            sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
