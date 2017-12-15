@@ -141,7 +141,7 @@ cook() {
     echo "-> Cooking firmware image"
     join_packages ${!flavor}
     echo "--> Selected extra packages:$PKG"
-    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" $ib_files $force_no_update $files_remove
+    make -C $ib image $profile PACKAGES="$PKG" EXTRA_IMAGE_NAME="$fw_extra_name" BIN_DIR="$output_dir" FILES="$ib_files" $force_no_update $files_remove
     ERROR=$?
     if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
@@ -355,9 +355,11 @@ download_sdk() {
 unpack_sdk() {
     local file="$1"
     local output="$2"
+
     [ -d $output/sdk ] && [ -z "$force_install" ] && {
         echo "-> SDK for $target already exist, doing nothing. Use --force to reinstall"
     } || {
+        [ ! -d "$output" ] && mkdir -p "$output"
         echo "-> Unpacking SDK to $output"
         tar xf $file -C $output/ && {
             [ -d $output/sdk ] && rm -rf $output/sdk
@@ -396,6 +398,7 @@ unpack_ib() {
      [ -d $output/ib ] && [ -z "$force_install" ] && {
         echo "-> ImageBuilder for $target already exist, doing nothing. Use --force to reinstall"
      } || {
+        [ ! -d "$output" ] && mkdir -p "$output"
         echo "-> Unpacking ImageBuilder to $output"
         tar xf $file -C $output/ && {
            [ -d $output/ib ] && rm -rf $output/ib
@@ -594,6 +597,10 @@ flavor=${flavor:-$default_flavor}
 profile=${profile:-Default}
 
 [ "$local_install" == "1" ] && {
+  [ -z "$target" ] && {
+    echo "-> Target must be specified for local install (i.e -i ar71xx/generic)"
+    exit 1
+  }
   [ -n "$sdk_path" ] && unpack_sdk "$sdk_path" $release/$target
   [ -n "$ib_path" ] && unpack_ib "$ib_path" $release/$target
   [ -z "$sdk_path$ib_path" ] && {
