@@ -5,4 +5,4 @@ src-git routing https://git.lede-project.org/feed/routing.git
 src-git telephony https://git.lede-project.org/feed/telephony.git
 src-git libremesh https://github.com/libremesh/lime-packages.git;develop
 src-git libremap https://github.com/libremap/libremap-agent-openwrt.git;master
-src-git limeui https://github.com/libremesh/lime-ui-ng.git;master
+src-git limeui https://github.com/libremesh/lime-packages-ui.git;master
