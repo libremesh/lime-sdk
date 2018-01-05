@@ -1,5 +1,5 @@
 # lime-sdk cooker
-LibreMesh **software development kit** uses the [LEDE](https://lede-project.org/docs/start) SDK and ImageBuilder to generate (**cook**) LibreMesh packages and firmware. If you want to create your own LibreMesh flavor because you need some specific configuration or you just want to have control over your binaries, the cooker is your friend!
+LibreMesh **software development kit** uses the [OpenWRT](https://openwrt.org) SDK and ImageBuilder to generate (**cook**) LibreMesh packages and firmware. If you want to create your own LibreMesh flavor because you need some specific configuration or you just want to have control over your binaries, the cooker is your friend!
 
 Basic usage example for cooking a firmware for TpLink 4300:
 
@@ -43,7 +43,7 @@ For instance, this will work for a TpLink WDR4300:
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default`
 
 ##### Target 
-Target references to the router architecture, usually depends on the manufactor and the set of chips used for building the hardware. Therefore, you must know the target and subtarget before using cooker. As we use LEDE, this information can be found here https://lede-project.org/toh/start. The most common targets are currently _ar71xx/generic_ (Atheros) and _ramips/mt7620_ (Ramips). Once we know the target, we must find the specific profile.
+Target references to the router architecture, usually depends on the manufactor and the set of chips used for building the hardware. Therefore, you must know the target and subtarget before using cooker. As we use OpenWRT, this information can be found here https://wiki.openwrt.org/toh/start. The most common targets are currently _ar71xx/generic_ (Atheros) and _ramips/mt7620_ (Ramips). Once we know the target, we must find the specific profile.
 
 To see the list of available targets execute:
 
@@ -91,7 +91,7 @@ Cooker can locally build the LibreMesh packages or fetch the remote precompiled 
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --remote`
 
 #### Using custom SDK and/or IB files
-Custom local SDK and IB files can be used (instead of fetching official LEDE sources). Must be specified before building or cooking ("-b" or "-c").
+Custom local SDK and IB files can be used (instead of fetching official OpenWRT sources). Must be specified before building or cooking ("-b" or "-c").
 
 `./cooker -f`
 `./cooker -i ar71xx/generic --ib-file=myOwnImageBuilder.tar.xz --sdk-file=myOwnSDK.tar.xz`
@@ -120,7 +120,7 @@ A community profile might include a special file named PACKAGES on the root of t
 
 ## Using development branch
 
-If you want to get the last LEDE source because it includes some new feature or it supports some new hardware, you can use the lime-sdk branch named _develop_. However as LEDE source is changing daily, we cannot assure the correct working of the firmware.
+If you want to get the last OpenWRT source because it includes some new feature or it supports some new hardware, you can use the lime-sdk branch named _develop_. However as OpenWRT source is changing daily, we cannot assure the correct working of the firmware.
 It is recommended to start with a new Git clone instead of reuse an existing one. Once the lime-sdk source is cloned, change the branch: `git checkout develop`
 
 ## Add your own feed repository
@@ -266,7 +266,7 @@ Time to time, if you want to update the code with the official one you might add
 
 While developing new features, or just testing out fixes, being able to see them in action without having to reflash a device can be useful. To
 achieve this you can spin a [QEMU](https://en.wikipedia.org/wiki/QEMU) virtual machine and boot the image with your edits.
-These instruction are based on [LEDE documentation](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to LibreMesh building process.
+These instruction are based on this [document](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to LibreMesh building process.
 
 First of all you need to create your cooked version of LibreMesh firmware for the `armvirt` target, see [up here](#preparing-the-local-environment).
 
