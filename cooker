@@ -631,8 +631,12 @@ profile=${profile:-Default}
         echo "-> If community is defined you must also specify its profile: --community=name/profile"
         exit 1
     } || [ -n "$community" ] && {
+        if [[ ${communities_dir:0:1} != "/" ]]; then
+            community_files="$PWD/$communities_dir/$community/$community_profile"
+        else
+            community_files="$communities_dir/$community/$community_profile"
+        fi
         download_communities
-        community_files="$PWD/$communities_dir/$community/$community_profile"
         [ ! -d "$community_files" ] && {
             echo "-> The community and profile specified does not exist ($community_files)"
             exit 1
