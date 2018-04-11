@@ -297,12 +297,23 @@ download_feeds() {
 }
 
 download_communities() {
-    [ ! -d "$communities_dir" ] && {
+    [ ! -d "$communities_git" ] && {
         echo "-> Downloading communities repository"
-        git clone $communities_git $communities_dir || {
+        if echo "$communities_git" | grep \;; then
+            url="$(echo $communities_git | awk -F\; '{print $1}')"
+            branch="$(echo $communities_git | awk -F\; '{print $2}')"
+            git clone $url -b $branch $communities_dir
+        elif echo "$communities_git" | grep \^; then
+            url="$(echo $communities_git | awk -F\^ '{print $1}')"
+            commit="$(echo $communities_git | awk -F\^ '{print $2}')"
+            git clone $url $communities_dir
+            ( cd $communities_dir && git checkout $commit )
+        else
+            git clone $communities_git $communities_dir || {
             echo "-> Cannot fetch communities repository"
             exit 1
         }
+        fi
     }
 }
 
