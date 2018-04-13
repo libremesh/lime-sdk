@@ -112,6 +112,8 @@ The default way to create or use a community is to use this Git repository https
 
 `/<community name>/<device profile name>/<files and directories>`
 
+You can choose to use a specific branch/commit of the network-profiles repo by appending ;<branch name> or ^<commit id> to the communities_git in your local version of options.conf, by default it will use the repos default branch (usually master) ie: 'https://github.com/libremesh/network-profiles;testing-branch' 
+
 Both community and device profile names can be any of your choice (must exist!) , since they are only used for identifying it. When executing a cook order, you can specify the community profile like this:
 
 `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --community=CommunityName/ProfileName`
