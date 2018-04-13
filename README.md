@@ -134,6 +134,11 @@ If it is a permanent change on your cooker setup, better add your repository (or
     cp feeds.conf.default feeds.conf.default.local
     vim feeds.conf.default.local
 
+if it's a new feed you'll also need to add it to sdk_install_packages in your options.conf.local file
+
+    cp options.conf options.conf.local
+    vim options.conf.local
+
 Edit and save the new created file _feeds.conf.default.local_ and force the reinstall of the feeds
 
     ./cooker -f --force
