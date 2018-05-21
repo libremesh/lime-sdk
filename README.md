@@ -93,10 +93,10 @@ Cooker can locally build the LibreMesh packages or fetch the remote precompiled 
 #### Using custom SDK and/or IB files
 Custom local SDK and IB files can be used (instead of fetching official LEDE sources). Must be specified before building or cooking ("-b" or "-c").
 
-`./cooker -f`
-`./cooker -i ar71xx/generic --ib-file=myOwnImageBuilder.tar.xz --sdk-file=myOwnSDK.tar.xz`
-`./cooker -b ar71xx/generic --force-local`
-`./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --force-local`
+- `./cooker -f`
+- `./cooker -i ar71xx/generic --ib-file=myOwnImageBuilder.tar.xz --sdk-file=myOwnSDK.tar.xz`
+- `./cooker -b ar71xx/generic --force-local`
+- `./cooker -c ar71xx/generic --profile=tl-wdr4300-v1 --flavor=lime_default --force-local`
 
 Do not forget to use _force-local_ option to use your own SDK target packages (kernel signature will be different from remote sources).
 
