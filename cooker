@@ -100,6 +100,8 @@ cook() {
         download_ib $target
     }
 
+    [ "$snapshots" -eq 1 ] && check_outdated "$target" "imagebuilder"
+
     [ -n "$use_remote_pkgs" ] && {
         local arch=`get_arch_from_ib $target`
         echo "-> Using remote repository for ImageBuilder, architecture: $arch"
@@ -188,9 +190,11 @@ build_sdk() {
 
     [ ! -d "$sdk" ] && {
         echo "-> SDK for target $target not found"
-        download_sdk $target
+        download_sdk "$target"
     }
-    
+
+    [ "$snapshots" -eq 1 ] && check_outdated "$target" "sdk"
+
     echo "-> Building $sdk"
     
     [ -f "$feeds_file" ] || { 
@@ -335,6 +339,30 @@ download_all() {
     cat $targets_list | while read t; do download_sdk $t; download_ib $t; done
 }
 
+check_outdated() {
+    echo "-> Check if snapshot is outdated"
+    local target="$1"
+    local type="$2"
+    local url="$base_url/$target"
+    local output="$release/$target"
+    local file_hash="$(get_hash_filename $url $type)"
+    local file="$(echo $file_hash | cut -d'*' -f 2)"
+
+    [ "$file_hash" != "$(cat $tmp_dir/${file}_checksum)" ] && {
+        echo "-> Snapshot $type is outdated"
+        echo "--> Removing and downloading again"
+        rm "$tmp_dir/$file"*
+        [ "$type" == "sdk" ] && download_sdk "$target"
+        [ "$type" == "imagebuilder" ] && download_ib "$target"
+    }
+}
+
+get_hash_filename() {
+    local url="$1"
+    local type="$2"
+    echo "$(wget -q -O- $url/sha256sums | grep ${brand_name}-$type)"
+}
+
 download_sdk() {
     local target="$1"
     [ -z "$target" ] && {
@@ -346,12 +374,17 @@ download_sdk() {
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
     
-    local sdk_file="$(wget -q -O- $url | grep ${brand_name}-sdk | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+    local sdk_file_hash="$(get_hash_filename $url sdk)"
+    local sdk_file="$(echo $sdk_file_hash | cut -d'*' -f 2)"
+
     echo "-> Downloading $url/$sdk_file"
     wget -c "$url/$sdk_file" -O "$tmp_dir/$sdk_file" || {
         echo "-> Error, cannot download SDK $url/$sdk_file"
         exit 1
     }
+
+    echo "$sdk_file_hash" > "$tmp_dir/${sdk_file}_checksum"
+
     unpack_sdk $tmp_dir/$sdk_file $output
 }
 
@@ -386,7 +419,9 @@ download_ib() {
     local url="$base_url/$target"
     local output="$release/$target"
     [ ! -d "$output" ] && mkdir -p "$output"
-    local ib_file="$(wget -q -O- $url | grep ${brand_name}-imagebuilder | grep href | awk -F\> '{print $4}' | awk -F\< '{print $1}')"
+
+    local ib_file_hash="$(get_hash_filename $url imagebuilder)"
+    local ib_file="$(echo $ib_file_hash | cut -d'*' -f 2)"
     echo "-> Downloading $url/$ib_file"
     wget -c "$url/$ib_file" -O "$tmp_dir/$ib_file" || {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
