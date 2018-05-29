@@ -1,0 +1,8 @@
+src-git base https://github.com/openwrt/openwrt.git;master
+src-git packages https://github.com/openwrt/packages.git;master
+src-git luci https://github.com/openwrt/luci.git;master
+src-git routing https://github.com/openwrt-routing/packages.git;master
+src-git telephony https://github.com/openwrt/telephony.git;master
+src-git libremesh https://github.com/libremesh/lime-packages.git;develop
+src-git libremap https://github.com/libremap/libremap-agent-openwrt.git;master
+src-git limeui https://github.com/libremesh/lime-packages-ui.git;master
