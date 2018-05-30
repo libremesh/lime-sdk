@@ -144,13 +144,18 @@ cook() {
       EXTRA_IMAGE_NAME="$fw_extra_name" \
       BIN_DIR="$output_dir" \
       `ls $ib_files_dir/* 1>/dev/null 2>&1 && echo "FILES=$ib_files_dir"` \
-      $force_no_update $files_remove
+      $force_no_update $files_remove | tee last-build.log
     ERROR=$?
     if (($ERROR != 0)); then
       echo -e "\n-> Firmware not cooked, something wrong happened on the ImageBuilder compilation process"
       ERROR_PROFILES="$ERROR_PROFILES $target/$profile/$flavor"
     else
-      echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory"
+        if cat last-build.log | grep "images are too big"; then
+            echo -e "\n-> Firmware is too big for device. Please try again with less packages or a mini flavor"
+            ERROR=1
+        else
+            echo -e "\n-> Firmware for target $target, profile $profile and flavor $flavor cooked!\nFind the binaries in $output_dir directory"
+        fi
     fi
     return $ERROR
 }
