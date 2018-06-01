@@ -219,6 +219,13 @@ build_sdk() {
     }
 
     cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
+
+    for r in $sdk_compile_repos; do
+        (cd $sdk && \
+            scripts/feeds uninstall -p $r && \
+            scripts/feeds install -a -p $r -d m)
+    done
+
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
         [ -f "$ib/repositories.original.conf" ] || download_ib $target
