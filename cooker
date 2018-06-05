@@ -204,28 +204,41 @@ build_sdk() {
     cp -f "$feeds_file" "$sdk/feeds.conf"
     [ -z "$no_update" ] && (cd $sdk && scripts/feeds update -a) || (cd $sdk && scripts/feeds update -i)
 
-    [ -n "$sdk_clean" ] && clean_sdk $target
+    [ -n "$sdk_clean" ] && clean_sdk "$target"
 
     for r in $sdk_install_repos; do
-        (cd $sdk && scripts/feeds install -p $r -a)
+        (cd "$sdk" && scripts/feeds install -p "$r" -a)
     done
     for p in $sdk_compile_packages; do
-        (cd $sdk && scripts/feeds install $p)
+        (cd $sdk && scripts/feeds install "$p")
     done
 
     [ -n "$package" ] && {
-        build_pkg $sdk $package
+        build_pkg "$sdk" "$package"
         return
     }
 
     cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
+
+    if [[ "$sign_packages" == "1" ]]; then
+        [ ! -f keys/key-build ] || [ ! -f keys/key-build.pub ] && {
+            echo "-> Signing keys not available. For signing packages you must create and copy them into keys/ directory."
+            echo "-> File names must be keys/key-build (private) and keys/key-build.pub (public)"
+            exit 1
+        }
+        cp -f ./keys/key-build* "$sdk/"
+        echo "CONFIG_SIGNED_PACKAGES=y" >> "$sdk/.config"
+    else
+        echo "CONFIG_SIGNED_PACKAGES=n" >> "$sdk/.config"
+    fi
+
     for p in $sdk_compile_packages; do
-        echo "CONFIG_PACKAGE_$p=m" >> $sdk/.config
+        echo "CONFIG_PACKAGE_$p=m" >> "$sdk/.config"
     done
 
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
-        [ -f "$ib/repositories.original.conf" ] || download_ib $target
+        [ -f "$ib/repositories.original.conf" ] || download_ib "$target"
         cat $ib/repositories.original.conf > $tmp_dir/repositories.sdk.conf
         echo "-> Linking IB with SDK"
         [ -n "$force_local" ] && echo "-> Force all local packages is on"
