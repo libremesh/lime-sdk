@@ -427,6 +427,9 @@ download_ib() {
         echo "-> Error, cannot download ImageBuilder $url/$ib_file"
         exit 1
     }
+
+    echo "$ib_file_hash" > "$tmp_dir/${ib_file}_checksum"
+
     unpack_ib $tmp_dir/$ib_file $output
 }
 
