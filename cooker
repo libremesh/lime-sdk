@@ -209,7 +209,7 @@ build_sdk() {
     for r in $sdk_install_repos; do
         (cd $sdk && scripts/feeds install -p $r -a)
     done
-    for p in $sdk_install_packages; do
+    for p in $sdk_compile_packages; do
         (cd $sdk && scripts/feeds install $p)
     done
 
@@ -219,6 +219,10 @@ build_sdk() {
     }
 
     cp ${sdk_config}.local $sdk/.config 2>/dev/null || cp ${sdk_config} $sdk/.config
+    for p in $sdk_compile_packages; do
+        echo "CONFIG_PACKAGE_$p=m" >> $sdk/.config
+    done
+
     make -C $sdk defconfig
     make -j$J -C $sdk V=$V && [ -z "$no_link_ib" ] && {
         [ -f "$ib/repositories.original.conf" ] || download_ib $target
