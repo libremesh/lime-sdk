@@ -275,7 +275,7 @@ build_sdk() {
             if [[ -d "$repo_path"  ]]; then
                 [ ! -d "$repository_dir/$sdk_arch" ] && mkdir -p "$repository_dir/$sdk_arch"
                 echo "-> Creating symlink for $sdk_arch/$repo"
-                ln -s "$repo_path" "$repository_dir/$sdk_arch/" 2>/dev/null
+                ln -sf "$repo_path" "$repository_dir/$sdk_arch/" 2>/dev/null
             else
                 echo "-> Couldn't find repo $repo"
             fi
