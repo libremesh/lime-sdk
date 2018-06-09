@@ -187,6 +187,14 @@ build_sdk() {
     local target="$1"
     local sdk="$release/$target/sdk"
     local ib="$release/$target/ib"
+    local sdk_arch="$(get_arch $target sdk)"
+
+    for build_arch in $build_archs; do
+        [[ "$sdk_arch" == "$build_arch" ]] && {
+            echo "-> Arch $build_sdk was build in this cycle"
+            return
+        }
+    done
 
     [ ! -d "$sdk" ] && {
         echo "-> SDK for target $target not found"
@@ -269,7 +277,6 @@ build_sdk() {
 
     [[ ! -z "$repository_dir" ]] && {
         [ ! -d "$repository_dir" ] && mkdir -p "$repository_dir"
-        local sdk_arch="$(get_arch $target sdk)"
         for repo in $sdk_install_repos; do
             local repo_path="$PWD/$sdk/bin/packages/$sdk_arch/$repo"
             if [[ -d "$repo_path"  ]]; then
@@ -281,6 +288,12 @@ build_sdk() {
             fi
         done
     }
+    
+    if [[ "$build_archs" != "" ]]; then
+        build_archs+=" $sdk_arch"
+    else
+        build_archs="$sdk_arch"
+    fi
 }
 
 build_pkg() {
@@ -374,6 +387,7 @@ update_feeds() {
 }
 
 build_all_sdk() {
+    build_archs=""
     for t in $(cat $targets_list); do build_sdk $t; done
 }
 
