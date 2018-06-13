@@ -191,7 +191,7 @@ build_sdk() {
 
     for build_arch in $build_archs; do
         [[ "$sdk_arch" == "$build_arch" ]] && {
-            echo "-> Arch $build_sdk was build in this cycle"
+            echo "-> Arch $build_arch was build in this cycle - skipping"
             return
         }
     done
