@@ -293,12 +293,7 @@ build_sdk() {
             fi
         done
     }
-    
-    if [[ "$build_archs" != "" ]]; then
-        build_archs+=" $sdk_arch"
-    else
-        build_archs="$sdk_arch"
-    fi
+    [ "$build_archs" != "" ] && build_archs+=" $sdk_arch" || build_archs="$sdk_arch"
 }
 
 build_pkg() {
