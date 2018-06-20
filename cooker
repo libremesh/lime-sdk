@@ -591,6 +591,7 @@ while true; do
             shift
         ;;
         --no-update)
+            ./snippets/patch_ib_no_update.sh
             no_update=1
             shift
         ;;
