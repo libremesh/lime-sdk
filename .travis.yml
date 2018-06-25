@@ -1,0 +1,15 @@
+sudo: required
+
+notifications:
+  email: false
+
+services:
+  - docker
+
+before_script:
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+
+script:
+  - docker build -t "libremesh/cooker:$TRAVIS_BRANCH"
+        --build-arg "BRANCH=$TRAVIS_BRANCH" .
+  - docker push "libremesh/cooker:$TRAVIS_BRANCH"
