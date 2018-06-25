@@ -1,4 +1,5 @@
 ar71xx/generic
+ar71xx/tiny
 x86/64
 ramips/rt305x
 ramips/rt3883
@@ -19,5 +20,4 @@ octeon/generic
 sunxi/cortexa53
 sunxi/cortexa7
 sunxi/cortexa8
-mediatek/32
 armvirt/64
