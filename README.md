@@ -145,6 +145,11 @@ Crete and add to the SDK config file the new packages you want to include (if an
     cp libremesh.sdk.config libremesh.sdk.config.local
     echo "CONFIG_PACKAGE_myNewPackage=m" >> libremesh.sdk.config.local
 
+Add the feed name to `sdk_install_repos` section in SDK options file
+
+	cp options.conf options.conf.local
+	vim options.conf.local
+
 Add your new flavor (or modify the existing ones)
 
     cp flavors.conf flavors.conf.local
