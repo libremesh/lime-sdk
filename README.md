@@ -278,7 +278,7 @@ These instruction are based on [OpenWrt documentation](https://openwrt.org/docs/
 First of all you need to create your cooked version of LibreMesh firmware for the `armvirt` target, see [up here](#preparing-the-local-environment).
 
     cd lime-sdk
-    ./cooker -c armvirt/generic --flavor=lime_default --update-feeds
+    ./cooker -c armvirt/generic --flavor=lime_default --update-feeds --remote
 
 Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
 accordingly to the architecture and profile chosen. The interesting files are:
@@ -313,16 +313,24 @@ TODO
 [VirtManager](https://github.com/virt-manager/virt-manager) is an higher level way to deal with virtualization using libvirt. Libvirt supports several
 virtualization technologies, not only Qemu. It's a quick'n'easy way to setup a test environment.
 
-Many distributions provide packages for Virt-Manager, you have to install it together with qemu:
+Many distributions provide packages for Virt-Manager, you have to install it together with qemu and qemu-system-arm or qemu-arch-extra:
 
 * **ArchLinux**: `sudo pacman -S virt-manager`
 * **Debian** and **Ubuntu**: `sudo apt-get install virt-manager`
 
-If you plan to use networking functions, like accessing the web interface, you'll need to install also `iptables` and `ebtables` packages.
+If you plan to use networking functions, like accessing the web interface, you'll need to install also `iptables`, `ebtables` and `firewalld` packages.
 
 The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-spin the VM to see your changes.
 
-What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with `sudo systemctl start libvirtd.service virtlogd.service`), open Virt-Manager and ensure you are connected to the
+What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with:
+
+ sudo systemctl start libvirtd.service virtlogd.service
+
+and, in case networking is needed, start also firewalld:
+
+ sudo systemctl start firewalld.service
+
+open Virt-Manager and ensure you are connected to the
 libvirt socket.
 
 Now you have to create a new virtual machine: click on *File/New Virtual Machine*, select *Import existing disk image* and choose the *arm* architecture under *Architecture options* and *virt* machine type.
