@@ -322,13 +322,13 @@ If you plan to use networking functions, like accessing the web interface, you'l
 
 The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-spin the VM to see your changes.
 
-What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with:
-
-`sudo systemctl start libvirtd.service virtlogd.service`
-
-and, in case networking is needed, start also firewalld:
+In case networking is needed, start firewalld:
 
 `sudo systemctl start firewalld.service`
+
+Start the libvirtd and virtlogd daemons (if not already started) start them with:
+
+`sudo systemctl start libvirtd.service virtlogd.service`
 
 open Virt-Manager and ensure you are connected to the
 libvirt socket.
