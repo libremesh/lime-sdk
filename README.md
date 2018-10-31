@@ -283,10 +283,10 @@ First of all you need to create your cooked version of LibreMesh firmware for th
 Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
 accordingly to the architecture and profile chosen. The interesting files are:
 
- * lede-17.01.2-lime-XXXX-zImage
- * lede-17.01.2-lime-XXXX-root.ext4.gz
+ * lede-17.01.4-lime-XXXX-zImage
+ * lede-17.01.4-lime-XXXX-root.ext4.gz
 
-Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.2-lime-XXXX-root.ext4.gz`
+Uncompress `lede-17.01.4-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.4-lime-XXXX-root.ext4.gz`
 
 Now you need to install qemu in order to boot the image, usually it's available inside the repositories of the distribution. Here some quick links
 documenting how to install it on [Debian](https://wiki.debian.org/QEMU) or [ArchLinux](https://wiki.archlinux.org/index.php/QEMU).
@@ -300,7 +300,7 @@ Now it's time to spin the virtual machine.
 ### Using plain QEMU
 Plain qemu can be launched straight from the command line, if you don't need to access LibreMesh web interface and just want to have a shell you can issue
 
-`qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-armvirt-zImage -drive file=lede-17.01.2-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
+`sudo qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.4-lime-XXXX-armvirt-zImage -drive file=lede-17.01.4-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
 
 Press enter and you will find yourself inside the VM booted.
 
@@ -324,11 +324,11 @@ The setup is a bit longer but is persistent and you will only need to rebuild th
 
 What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with:
 
- sudo systemctl start libvirtd.service virtlogd.service
+`sudo systemctl start libvirtd.service virtlogd.service`
 
 and, in case networking is needed, start also firewalld:
 
- sudo systemctl start firewalld.service
+`sudo systemctl start firewalld.service`
 
 open Virt-Manager and ensure you are connected to the
 libvirt socket.
