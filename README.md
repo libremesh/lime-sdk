@@ -278,15 +278,15 @@ These instruction are based on [OpenWrt documentation](https://openwrt.org/docs/
 First of all you need to create your cooked version of LibreMesh firmware for the `armvirt` target, see [up here](#preparing-the-local-environment).
 
     cd lime-sdk
-    ./cooker -c armvirt/generic --flavor=lime_default --update-feeds
+    ./cooker -c armvirt/generic --flavor=lime_default --update-feeds --remote
 
 Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
 accordingly to the architecture and profile chosen. The interesting files are:
 
- * lede-17.01.2-lime-XXXX-zImage
- * lede-17.01.2-lime-XXXX-root.ext4.gz
+ * lede-17.01.4-lime-XXXX-zImage
+ * lede-17.01.4-lime-XXXX-root.ext4.gz
 
-Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.2-lime-XXXX-root.ext4.gz`
+Uncompress `lede-17.01.4-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.4-lime-XXXX-root.ext4.gz`
 
 Now you need to install qemu in order to boot the image, usually it's available inside the repositories of the distribution. Here some quick links
 documenting how to install it on [Debian](https://wiki.debian.org/QEMU) or [ArchLinux](https://wiki.archlinux.org/index.php/QEMU).
@@ -300,7 +300,7 @@ Now it's time to spin the virtual machine.
 ### Using plain QEMU
 Plain qemu can be launched straight from the command line, if you don't need to access LibreMesh web interface and just want to have a shell you can issue
 
-`qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-armvirt-zImage -drive file=lede-17.01.2-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
+`sudo qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.4-lime-XXXX-armvirt-zImage -drive file=lede-17.01.4-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
 
 Press enter and you will find yourself inside the VM booted.
 
@@ -313,16 +313,24 @@ TODO
 [VirtManager](https://github.com/virt-manager/virt-manager) is an higher level way to deal with virtualization using libvirt. Libvirt supports several
 virtualization technologies, not only Qemu. It's a quick'n'easy way to setup a test environment.
 
-Many distributions provide packages for Virt-Manager, you have to install it together with qemu:
+Many distributions provide packages for Virt-Manager, you have to install it together with qemu and qemu-system-arm or qemu-arch-extra:
 
 * **ArchLinux**: `sudo pacman -S virt-manager`
 * **Debian** and **Ubuntu**: `sudo apt-get install virt-manager`
 
-If you plan to use networking functions, like accessing the web interface, you'll need to install also `iptables` and `ebtables` packages.
+If you plan to use networking functions, like accessing the web interface, you'll need to install also `iptables`, `ebtables` and `firewalld` packages.
 
 The setup is a bit longer but is persistent and you will only need to rebuild the images from `cooker` and re-spin the VM to see your changes.
 
-What you need to do is to start the libvirtd and virtlogd daemons (if not already started start them with `sudo systemctl start libvirtd.service virtlogd.service`), open Virt-Manager and ensure you are connected to the
+In case networking is needed, start firewalld:
+
+`sudo systemctl start firewalld.service`
+
+Start the libvirtd and virtlogd daemons (if not already started) start them with:
+
+`sudo systemctl start libvirtd.service virtlogd.service`
+
+open Virt-Manager and ensure you are connected to the
 libvirt socket.
 
 Now you have to create a new virtual machine: click on *File/New Virtual Machine*, select *Import existing disk image* and choose the *arm* architecture under *Architecture options* and *virt* machine type.
