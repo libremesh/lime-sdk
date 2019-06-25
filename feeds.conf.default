@@ -1,7 +1,7 @@
-src-git base https://git.openwrt.org/openwrt/openwrt.git;v18.06.1
+src-git base https://git.openwrt.org/openwrt/openwrt.git;v18.06.2
 src-git packages https://git.openwrt.org/feed/packages.git;openwrt-18.06
 src-git luci https://git.openwrt.org/project/luci.git;openwrt-18.06
-src-git routing https://git.openwrt.org/feed/routing.git;master
+src-git routing https://git.openwrt.org/feed/routing.git;openwrt-18.06
 src-git telephony https://git.openwrt.org/feed/telephony.git;openwrt-18.06
 src-git libremesh https://github.com/libremesh/lime-packages.git;master
 src-git libremap https://github.com/libremap/libremap-agent-openwrt.git;master
