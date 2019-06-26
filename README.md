@@ -3,7 +3,7 @@ LibreMesh **software development kit** uses the [OpenWRT](https://openwrt.org) S
 
 Basic usage example for cooking a libremesh using bmx7 routing protocol firmware for device Alix Board 2d2 using remote repositories (no compilation required). Recommended for most people:
 
-`./cooker -c x86/geode --profile=Generic --flavor=lime_bmx7 --community=libremesh/only-bmx7 --remote'`
+`./cooker -c x86/geode --profile=Generic --flavor=lime_bmx7 --community=libremesh/only-bmx7 --remote`
 
 Basic usage example for cooking a firmware for TpLink 4300 compiling localy the libremesh packages:
 
