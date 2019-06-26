@@ -1,9 +1,14 @@
 # lime-sdk cooker
 LibreMesh **software development kit** uses the [OpenWRT](https://openwrt.org) SDK and ImageBuilder to generate (**cook**) LibreMesh packages and firmware. If you want to create your own LibreMesh flavor because you need some specific configuration or you just want to have control over your binaries, the cooker is your friend!
 
-Basic usage example for cooking a firmware for TpLink 4300:
+Basic usage example for cooking a libremesh using bmx7 routing protocol firmware for device Alix Board 2d2 using remote repositories (no compilation required). Recommended for most people:
 
-`./cooker -c ar71xx/generic --flavor=lime_default --profile=tl-wdr4300-v1`
+`./cooker -c x86/geode --profile=Generic --flavor=lime_bmx7 --community=libremesh/only-bmx7 --remote'`
+
+Basic usage example for cooking a firmware for TpLink 4300 compiling localy the libremesh packages:
+
+`./cooker -c ar71xx/generic --flavor=lime_bmx7 --profile=tl-wdr4300-v1 --community=libremesh/only-bmx7`
+
 
 ## Using cooker online with Chef
 

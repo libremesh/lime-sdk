@@ -260,9 +260,7 @@ build_sdk() {
         for r in $PWD/$sdk/bin/packages/*/*; do
           [ -z "$force_local" ] && {
             case $r in
-            # we build the master branch of the routing feed, hence
-            # don't include it in the filter
-            *base | *luci | *packages | *telephony)
+            *base | *luci | *packages | *telephony | *routing)
                continue
               ;;
             esac
@@ -501,7 +499,7 @@ unpack_ib() {
            [ -d $output/ib ] && rm -rf $output/ib
            mv $output/${brand_name}-imagebuilder* $output/ib
            cp -f $output/ib/repositories.conf $output/ib/repositories.original.conf
-           sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
+           #sed -i 's%^src/gz .*_routing .*$%# &%' $output/ib/repositories.original.conf
        } || echo "-> Error installing ImageBuilder"
     }
 }
