@@ -26,7 +26,7 @@ Install build dependencies, for example on a Debian/Ubuntu based Linux distribut
 sudo apt-get install subversion zlib1g-dev gawk flex unzip bzip2 gettext build-essential libncurses5-dev libncursesw5-dev libssl-dev binutils cpp psmisc docbook-to-man wget git
 ```
 
-For other systems, you might follow these instructions (look for _Examples of Package Installations_) https://lede-project.org/docs/guide-developer/install-buildsystem
+For other systems, you might follow these instructions (look for _Examples of Package Installations_) https://openwrt.org/docs/guide-developer/build-system/install-buildsystem
 
 ### Building in docker container
 
@@ -271,7 +271,6 @@ Time to time, if you want to update the code with the official one you might add
 
 While developing new features, or just testing out fixes, being able to see them in action without having to reflash a device can be useful. To
 achieve this you can spin a [QEMU](https://en.wikipedia.org/wiki/QEMU) virtual machine and boot the image with your edits.
-These instruction are based on this [document](https://lede-project.org/docs/guide-developer/test-virtual-image-using-armvirt) but are a bit more specific to LibreMesh building process.
 
 First of all you need to create your cooked version of LibreMesh firmware for the `armvirt` target, see [up here](#preparing-the-local-environment).
 
@@ -281,10 +280,10 @@ First of all you need to create your cooked version of LibreMesh firmware for th
 Once `cooker` finishes to build the image you'll find the needed files in the `output` folder of `lime-sdk`, they will be located in a subfolder
 accordingly to the architecture and profile chosen. The interesting files are:
 
- * lede-17.01.2-lime-XXXX-zImage
- * lede-17.01.2-lime-XXXX-root.ext4.gz
+ * openwrt-lime-XXXX-zImage
+ * openwrt-lime-XXXX-root.ext4.gz
 
-Uncompress `lede-17.01.2-lime-XXXX-root.ext4.gz` using `gunzip -k lede-17.01.2-lime-XXXX-root.ext4.gz`
+Uncompress `openwrt-lime-XXXX-root.ext4.gz` using `gunzip -k openwrt-lime-XXXX-root.ext4.gz`
 
 Now you need to install qemu in order to boot the image, usually it's available inside the repositories of the distribution. Here some quick links
 documenting how to install it on [Debian](https://wiki.debian.org/QEMU) or [ArchLinux](https://wiki.archlinux.org/index.php/QEMU).
@@ -298,7 +297,7 @@ Now it's time to spin the virtual machine.
 ### Using plain QEMU
 Plain qemu can be launched straight from the command line, if you don't need to access LibreMesh web interface and just want to have a shell you can issue
 
-`qemu-system-arm -nographic -M virt -m 64 -kernel lede-17.01.2-lime-XXXX-armvirt-zImage -drive file=lede-17.01.2-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
+`qemu-system-arm -nographic -M virt -m 64 -kernel openwrt-lime-XXXX-armvirt-zImage -drive file=openwrt-lime-XXXX-armvirt-root.ext4,format=raw,if=virtio -append 'root=/dev/vda rootwait'`
 
 Press enter and you will find yourself inside the VM booted.
 
@@ -325,7 +324,7 @@ libvirt socket.
 
 Now you have to create a new virtual machine: click on *File/New Virtual Machine*, select *Import existing disk image* and choose the *arm* architecture under *Architecture options* and *virt* machine type.
 
-Taking arm as an example you'll have to choose (clicking *Browse* and *Browse Local* buttons) the `lede-17.01.2-lime-XXXX-armvirt-root.ext4` file as storage disk and the `lede-17.01.2-lime-XXXX-armvirt-zImage` file as Kernel path. Insert `root=/dev/vda rootwait` as Kernel args. You can leave *OS type* as *Generic*.
+Taking arm as an example you'll have to choose (clicking *Browse* and *Browse Local* buttons) the `openwrt-lime-XXXX-armvirt-root.ext4` file as storage disk and the `openwrt-lime-XXXX-armvirt-zImage` file as Kernel path. Insert `root=/dev/vda rootwait` as Kernel args. You can leave *OS type* as *Generic*.
 
 Assign resources (64 MB of RAM memory should be enough) and, under *Network selection*, choose `NAT` as network type. In this way you will be able to connect to the web interface and the device will have internet access.
 
