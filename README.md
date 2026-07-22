@@ -1,3 +1,12 @@
+# OBSOLETE AND ARCHIVED
+This is not anymore the recommended compilation method for creating LibreMesh firmware images.
+
+Please refer to the website https://libremesh.org for the currently supported methods. On the website, you will also find the list of communication channels where you can ask for help to the rest of the community :)
+
+---
+---
+---
+
 # lime-sdk cooker
 LibreMesh **software development kit** uses the [OpenWRT](https://openwrt.org) SDK and ImageBuilder to generate (**cook**) LibreMesh packages and firmware. If you want to create your own LibreMesh flavor because you need some specific configuration or you just want to have control over your binaries, the cooker is your friend!
 
